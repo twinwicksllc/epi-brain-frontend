@@ -1,10 +1,19 @@
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const PROXY_API_URL = '/api/proxy'; // Local proxy as fallback
 
 // Create axios instance
 export const apiClient = axios.create({
   baseURL: `${API_URL}/api/v1`,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Create proxy axios instance as fallback
+export const proxyApiClient = axios.create({
+  baseURL: PROXY_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -65,12 +74,26 @@ apiClient.interceptors.response.use(
 // Auth API
 export const authApi = {
   register: async (email: string, password: string) => {
-    const response = await apiClient.post('/auth/register', {
-      email,
-      password,
-      voice_preference: 'none',
-    });
-    return response.data;
+    try {
+      const response = await apiClient.post('/auth/register', {
+        email,
+        password,
+        voice_preference: 'none',
+      });
+      return response.data;
+    } catch (error: any) {
+      // If CORS error, try proxy
+      if (error.message?.includes('CORS') || error.code === 'ERR_NETWORK') {
+        console.log('CORS error detected, trying proxy...');
+        const proxyResponse = await proxyApiClient.post('/auth/register', {
+          email,
+          password,
+          voice_preference: 'none',
+        });
+        return proxyResponse.data;
+      }
+      throw error;
+    }
   },
 
   login: async (email: string, password: string) => {
