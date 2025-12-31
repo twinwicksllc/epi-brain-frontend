@@ -30,6 +30,20 @@ export async function DELETE(
   return proxyRequest(request, params.path);
 }
 
+export async function OPTIONS(
+  request: NextRequest,
+  { params }: { params: { path: string[] } }
+) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+    },
+  });
+}
+
 async function proxyRequest(request: NextRequest, path: string[]) {
   const targetUrl = `${BACKEND_URL}/api/v1/${path.join('/')}`;
   
@@ -40,20 +54,38 @@ async function proxyRequest(request: NextRequest, path: string[]) {
   });
   
   try {
+    // Get the request body
+    let body = undefined;
+    if (request.method !== 'GET') {
+      try {
+        body = await request.text();
+      } catch (e) {
+        console.error('Failed to read request body:', e);
+      }
+    }
+    
     const response = await fetch(targetUrl, {
       method: request.method,
       headers: {
         'Content-Type': 'application/json',
         // Forward any other headers if needed
       },
-      body: request.method !== 'GET' ? await request.text() : undefined,
+      body: body,
     });
 
     console.log('Backend response status:', response.status);
 
-    const data = await response.json();
+    let data;
+    try {
+      const responseText = await response.text();
+      console.log('Backend response:', { status: response.status, responseText });
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse backend response:', e);
+      data = { error: 'Invalid response from backend', raw: await response.text() };
+    }
 
-    console.log('Proxy success:', { status: response.status });
+    console.log('Proxy success:', { status: response.status, data });
 
     return NextResponse.json(data, {
       status: response.status,
@@ -66,7 +98,7 @@ async function proxyRequest(request: NextRequest, path: string[]) {
   } catch (error) {
     console.error('Proxy error:', error);
     return NextResponse.json(
-      { error: 'Proxy request failed', details: error.message },
+      { error: 'Proxy request failed', details: error.message, stack: error.stack },
       { 
         status: 500,
         headers: {
