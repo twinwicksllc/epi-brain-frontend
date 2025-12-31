@@ -119,7 +119,7 @@ export default function Home() {
           <h3 className="text-3xl font-bold text-white text-center mb-12">
             Choose Your AI Personality
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
             {modes.map((mode) => {
               const Icon = mode.icon;
               return (
@@ -144,7 +144,7 @@ export default function Home() {
 
         {/* Features Section */}
         <section className="container mx-auto px-6 py-20">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="text-center">
               <div className="w-16 h-16 bg-[#7B3FF2]/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="text-[#7B3FF2]" size={32} />
@@ -171,7 +171,7 @@ export default function Home() {
 
         {/* CTA Section */}
         <section className="container mx-auto px-6 py-20 text-center">
-          <div className="bg-gradient-to-r from-[#7B3FF2]/20 to-[#A78BFA]/20 border border-[#7B3FF2]/30 rounded-2xl p-12">
+          <div className="bg-gradient-to-r from-[#7B3FF2]/20 to-[#A78BFA]/20 border border-[#7B3FF2]/30 rounded-2xl p-12 max-w-4xl mx-auto">
             <h3 className="text-4xl font-bold text-white mb-4">
               Ready to Transform Your Life?
             </h3>
