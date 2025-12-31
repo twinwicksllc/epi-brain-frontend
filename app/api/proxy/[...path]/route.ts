@@ -33,6 +33,12 @@ export async function DELETE(
 async function proxyRequest(request: NextRequest, path: string[]) {
   const targetUrl = `${BACKEND_URL}/api/v1/${path.join('/')}`;
   
+  console.log('Proxy request:', {
+    method: request.method,
+    targetUrl,
+    path: path.join('/')
+  });
+  
   try {
     const response = await fetch(targetUrl, {
       method: request.method,
@@ -43,7 +49,11 @@ async function proxyRequest(request: NextRequest, path: string[]) {
       body: request.method !== 'GET' ? await request.text() : undefined,
     });
 
+    console.log('Backend response status:', response.status);
+
     const data = await response.json();
+
+    console.log('Proxy success:', { status: response.status });
 
     return NextResponse.json(data, {
       status: response.status,
@@ -56,7 +66,7 @@ async function proxyRequest(request: NextRequest, path: string[]) {
   } catch (error) {
     console.error('Proxy error:', error);
     return NextResponse.json(
-      { error: 'Proxy request failed' },
+      { error: 'Proxy request failed', details: error.message },
       { 
         status: 500,
         headers: {
