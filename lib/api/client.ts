@@ -46,7 +46,7 @@ apiClient.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
-          const response = await axios.post(`${API_URL}/api/v1/auth/refresh`, {
+          const response = await axios.post(`${PROXY_API_URL}/auth/refresh`, {
             refresh_token: refreshToken,
           });
 
@@ -56,7 +56,7 @@ apiClient.interceptors.response.use(
           localStorage.setItem('refresh_token', newRefreshToken);
 
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
-          return apiClient(originalRequest);
+          return proxyApiClient(originalRequest);
         }
       } catch (refreshError) {
         // Refresh failed, logout user
@@ -74,30 +74,18 @@ apiClient.interceptors.response.use(
 // Auth API
 export const authApi = {
   register: async (email: string, password: string) => {
-    try {
-      const response = await apiClient.post('/auth/register', {
-        email,
-        password,
-        voice_preference: 'none',
-      });
-      return response.data;
-    } catch (error: any) {
-      // If CORS error, try proxy
-      if (error.message?.includes('CORS') || error.code === 'ERR_NETWORK') {
-        console.log('CORS error detected, trying proxy...');
-        const proxyResponse = await proxyApiClient.post('/auth/register', {
-          email,
-          password,
-          voice_preference: 'none',
-        });
-        return proxyResponse.data;
-      }
-      throw error;
-    }
+    // Always use proxy for GitHub Codespaces to avoid CORS issues
+    console.log('Using proxy for registration...');
+    const proxyResponse = await proxyApiClient.post('/auth/register', {
+      email,
+      password,
+      voice_preference: 'none',
+    });
+    return proxyResponse.data;
   },
 
   login: async (email: string, password: string) => {
-    const response = await apiClient.post('/auth/login', {
+    const response = await proxyApiClient.post('/auth/login', {
       email,
       password,
     });
@@ -105,7 +93,7 @@ export const authApi = {
   },
 
   logout: async () => {
-    await apiClient.post('/auth/logout');
+    await proxyApiClient.post('/auth/logout');
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
   },
@@ -114,7 +102,7 @@ export const authApi = {
 // Chat API
 export const chatApi = {
   sendMessage: async (message: string, conversationId?: string, mode: string = 'personal_friend') => {
-    const response = await apiClient.post('/chat/message', {
+    const response = await proxyApiClient.post('/chat/message', {
       message,
       conversation_id: conversationId,
       mode,
@@ -123,34 +111,34 @@ export const chatApi = {
   },
 
   getConversations: async () => {
-    const response = await apiClient.get('/chat/conversations');
+    const response = await proxyApiClient.get('/chat/conversations');
     return response.data;
   },
 
   getConversation: async (conversationId: string) => {
-    const response = await apiClient.get(`/chat/conversations/${conversationId}`);
+    const response = await proxyApiClient.get(`/chat/conversations/${conversationId}`);
     return response.data;
   },
 
   deleteConversation: async (conversationId: string) => {
-    await apiClient.delete(`/chat/conversations/${conversationId}`);
+    await proxyApiClient.delete(`/chat/conversations/${conversationId}`);
   },
 };
 
 // User API
 export const userApi = {
   getProfile: async () => {
-    const response = await apiClient.get('/users/me');
+    const response = await proxyApiClient.get('/users/me');
     return response.data;
   },
 
   updateProfile: async (data: any) => {
-    const response = await apiClient.put('/users/me', data);
+    const response = await proxyApiClient.put('/users/me', data);
     return response.data;
   },
 
   getUsage: async () => {
-    const response = await apiClient.get('/users/me/usage');
+    const response = await proxyApiClient.get('/users/me/usage');
     return response.data;
   },
 };
@@ -158,17 +146,17 @@ export const userApi = {
 // Modes API
 export const modesApi = {
   getAvailableModes: async () => {
-    const response = await apiClient.get('/modes');
+    const response = await proxyApiClient.get('/modes');
     return response.data;
   },
 
   getModeDetails: async (modeId: string) => {
-    const response = await apiClient.get(`/modes/${modeId}`);
+    const response = await proxyApiClient.get(`/modes/${modeId}`);
     return response.data;
   },
 
   switchMode: async (modeId: string) => {
-    const response = await apiClient.post('/modes/switch', null, {
+    const response = await proxyApiClient.post('/modes/switch', null, {
       params: { mode_id: modeId },
     });
     return response.data;
