@@ -13,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="">{children}</body>
+      <body className="min-h-screen bg-gradient-to-br from-[#1a0a2e] to-[#2d1b4e]">{children}</body>
     </html>
   );
 }
