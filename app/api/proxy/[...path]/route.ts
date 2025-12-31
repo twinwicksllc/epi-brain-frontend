@@ -68,12 +68,21 @@ async function proxyRequest(request: NextRequest, path: string[]) {
       }
     }
     
+    // Get authorization header from request
+    const authHeader = request.headers.get('authorization');
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Forward authorization header if present
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+    
     const response = await fetch(targetUrl, {
       method: request.method,
-      headers: {
-        'Content-Type': 'application/json',
-        // Forward any other headers if needed
-      },
+      headers: headers,
       body: body,
     });
 
