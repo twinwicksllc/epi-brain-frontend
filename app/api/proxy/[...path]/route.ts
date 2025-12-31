@@ -1,33 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = 'https://fluffy-waddle-v677rpg5pr64c6w55-8000.app.github.dev';
+const BACKEND_URL = 'http://localhost:8000';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
-  return proxyRequest(request, params.path);
+  const { path } = await params;
+  return proxyRequest(request, path);
 }
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
-  return proxyRequest(request, params.path);
+  const { path } = await params;
+  return proxyRequest(request, path);
 }
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
-  return proxyRequest(request, params.path);
+  const { path } = await params;
+  return proxyRequest(request, path);
 }
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
-  return proxyRequest(request, params.path);
+  const { path } = await params;
+  return proxyRequest(request, path);
 }
 
 export async function OPTIONS(
@@ -102,19 +106,6 @@ async function proxyRequest(request: NextRequest, path: string[]) {
         'Access-Control-Allow-Headers': '*',
       },
     });
-  } catch (error) {
-    console.error('Proxy error:', error);
-    return NextResponse.json(
-      { error: 'Proxy request failed', details: error.message, stack: error.stack },
-      { 
-        status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
-  }
-}
   } catch (error) {
     console.error('Proxy error:', error);
     return NextResponse.json(
