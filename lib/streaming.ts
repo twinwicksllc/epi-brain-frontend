@@ -12,9 +12,8 @@ export async function* streamChatResponse(
   mode: string
 ): AsyncGenerator<StreamMessage> {
   const token = localStorage.getItem('access_token');
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-  const response = await fetch(`${API_URL}/api/v1/chat/stream`, {
+  const response = await fetch(`/api/proxy/chat/stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -19,6 +19,20 @@ export const proxyApiClient = axios.create({
   },
 });
 
+// Request interceptor for proxy client to add auth token
+proxyApiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
