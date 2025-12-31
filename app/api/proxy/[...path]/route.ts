@@ -76,13 +76,20 @@ async function proxyRequest(request: NextRequest, path: string[]) {
     console.log('Backend response status:', response.status);
 
     let data;
+    let responseText;
     try {
-      const responseText = await response.text();
-      console.log('Backend response:', { status: response.status, responseText });
+      responseText = await response.text();
+      console.log('Backend response:', { 
+        status: response.status, 
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        responseText: responseText.substring(0, 500) // Log first 500 chars
+      });
       data = JSON.parse(responseText);
     } catch (e) {
       console.error('Failed to parse backend response:', e);
-      data = { error: 'Invalid response from backend', raw: await response.text() };
+      console.log('Raw response text:', responseText);
+      data = { error: 'Invalid response from backend', raw: responseText };
     }
 
     console.log('Proxy success:', { status: response.status, data });
@@ -95,6 +102,19 @@ async function proxyRequest(request: NextRequest, path: string[]) {
         'Access-Control-Allow-Headers': '*',
       },
     });
+  } catch (error) {
+    console.error('Proxy error:', error);
+    return NextResponse.json(
+      { error: 'Proxy request failed', details: error.message, stack: error.stack },
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    );
+  }
+}
   } catch (error) {
     console.error('Proxy error:', error);
     return NextResponse.json(
