@@ -240,8 +240,8 @@ export default function Dashboard() {
                   key={message.id}
                   role={message.role}
                   content={message.content}
-                />
                   currentDepth={currentDepth}
+                />
               ))}
 
               {streamingMessage && (
@@ -249,8 +249,8 @@ export default function Dashboard() {
                   role="assistant"
                   content={streamingMessage}
                   isStreaming={true}
-                />
                   currentDepth={currentDepth}
+                />
               )}
 
               <div ref={messagesEndRef} />
