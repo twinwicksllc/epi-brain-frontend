@@ -165,7 +165,7 @@ export const userApi = {
 // Modes API
 export const modesApi = {
   getAvailableModes: async () => {
-    const response = await proxyApiClient.get('/api/v1/modes/');
+    const response = await proxyApiClient.get('/modes/');
     return response.data;
   },
 
