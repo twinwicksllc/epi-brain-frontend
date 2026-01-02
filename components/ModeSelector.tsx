@@ -46,6 +46,13 @@ export default function ModeSelector({ currentMode, onModeChange }: ModeSelector
 
   useEffect(() => {
     loadModes();
+    // Retry loading modes after 2 seconds if it fails
+    const retryTimer = setTimeout(() => {
+      if (modes.length === 0) {
+        loadModes();
+      }
+    }, 2000);
+    return () => clearTimeout(retryTimer);
   }, []);
 
   const loadModes = async () => {
