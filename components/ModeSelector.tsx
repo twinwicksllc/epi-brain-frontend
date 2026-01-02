@@ -56,18 +56,23 @@ export default function ModeSelector({ currentMode, onModeChange }: ModeSelector
   }, []);
 
   const loadModes = async () => {
+    // Use fallback modes by default (avoids API call issues in Codespaces)
+    const fallbackModes = Object.keys(MODE_NAMES).map(id => ({
+      id,
+      name: MODE_NAMES[id],
+      description: '',
+      icon: MODE_ICONS[id],
+    }));
+    
+    setModes(fallbackModes);
+    
+    // Try to load from API in background (optional enhancement)
     try {
       const data = await modesApi.getAvailableModes();
       setModes(data);
     } catch (error) {
-      console.error('Failed to load modes:', error);
-      // Fallback to default modes
-      setModes(Object.keys(MODE_NAMES).map(id => ({
-        id,
-        name: MODE_NAMES[id],
-        description: '',
-        icon: MODE_ICONS[id],
-      })));
+      // Silently fail - we already have fallback modes loaded
+      console.log('Using fallback modes (API unavailable)');
     }
   };
 
