@@ -121,7 +121,7 @@ export const chatApi = {
       conversation_id: conversationId,
       mode,
     });
-    return response.data;
+    return response.data; // Returns ChatResponse with depth field
   },
 
   getConversations: async () => {
@@ -136,6 +136,11 @@ export const chatApi = {
 
   deleteConversation: async (conversationId: string) => {
     await proxyApiClient.delete(`/chat/conversations/${conversationId}`);
+  },
+
+  getConversationDepth: async (conversationId: string) => {
+    const response = await proxyApiClient.get(`/chat/conversations/${conversationId}/depth`);
+    return response.data;
   },
 };
 

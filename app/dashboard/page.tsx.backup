@@ -241,7 +241,6 @@ export default function Dashboard() {
                   role={message.role}
                   content={message.content}
                 />
-                  currentDepth={currentDepth}
               ))}
 
               {streamingMessage && (
@@ -250,7 +249,6 @@ export default function Dashboard() {
                   content={streamingMessage}
                   isStreaming={true}
                 />
-                  currentDepth={currentDepth}
               )}
 
               <div ref={messagesEndRef} />
@@ -258,7 +256,7 @@ export default function Dashboard() {
           </div>
 
           {/* Input Area */}
-          <div className="bg-[#1a0a2e]/80 backdrop-blur-sm border-t border-[#7B3FF2]/20 px-6 py-4">
+          <div className="bg-[#1a0a2e] border-t border-[#7B3FF2]/20 px-6 py-4">
             <div className="max-w-4xl mx-auto">
               <ChatInput
                 onSendMessage={handleSendMessage}

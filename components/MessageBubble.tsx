@@ -6,10 +6,24 @@ interface MessageBubbleProps {
   role: 'user' | 'assistant';
   content: string;
   isStreaming?: boolean;
+  currentDepth?: number | null;
 }
 
-export default function MessageBubble({ role, content, isStreaming }: MessageBubbleProps) {
+export default function MessageBubble({ role, content, isStreaming, currentDepth }: MessageBubbleProps) {
   const isUser = role === 'user';
+
+  // Get bubble border color based on depth (for assistant messages only)
+  const getBorderColor = (depth: number | null | undefined) => {
+    if (isUser || depth === null || depth === undefined) {
+      return 'border-[#7B3FF2]/20';
+    }
+    
+    // Darker border for deeper conversations
+    const opacity = 0.2 + (depth * 0.3); // 0.2 to 0.5
+    return `rgba(123, 63, 242, ${opacity})`;
+  };
+
+  const borderColor = getBorderColor(currentDepth);
 
   return (
     <div className={`flex gap-4 ${isUser ? 'justify-end' : 'justify-start'} mb-6`}>
@@ -20,11 +34,12 @@ export default function MessageBubble({ role, content, isStreaming }: MessageBub
       )}
 
       <div
-        className={`max-w-[70%] rounded-2xl px-6 py-4 ${
+        className={`max-w-[70%] rounded-2xl px-6 py-4 transition-all duration-500 ${
           isUser
             ? 'bg-[#7B3FF2] text-white'
-            : 'bg-[#2d1b4e] text-white border border-[#7B3FF2]/20'
+            : 'bg-[#2d1b4e] text-white border'
         }`}
+        style={{ borderColor }}
       >
         <div className="whitespace-pre-wrap break-words">
           {content}
