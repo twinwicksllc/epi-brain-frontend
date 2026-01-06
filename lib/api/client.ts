@@ -56,7 +56,7 @@ apiClient.interceptors.response.use(
 );
 
 // Auth API
-export const authAPI = {
+export const authApi = {
   register: async (email: string, password: string) => {
     const response = await apiClient.post('/auth/register', { email, password });
     return response.data;
@@ -79,7 +79,7 @@ export const authAPI = {
 };
 
 // Chat API
-export const chatAPI = {
+export const chatApi = {
   sendMessage: async (mode: string, message: string, conversationId?: string) => {
     const response = await apiClient.post('/chat/message', {
       mode,
@@ -111,7 +111,7 @@ export const chatAPI = {
 };
 
 // Modes API
-export const modesAPI = {
+export const modesApi = {
   getModes: async () => {
     const response = await apiClient.get('/modes');
     return response.data;
@@ -124,7 +124,7 @@ export const modesAPI = {
 };
 
 // User API
-export const userAPI = {
+export const userApi = {
   getProfile: async () => {
     const response = await apiClient.get('/users/me');
     return response.data;
