@@ -68,7 +68,7 @@ export default function ModeSelector({ currentMode, onModeChange }: ModeSelector
     
     // Try to load from API in background (optional enhancement)
     try {
-      const data = await modesApi.getAvailableModes();
+      const data = await modesApi.getModes();
       setModes(data);
     } catch (error) {
       // Silently fail - we already have fallback modes loaded

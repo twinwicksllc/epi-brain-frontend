@@ -81,7 +81,7 @@ export default function Dashboard() {
 
       // Fallback to regular API if streaming failed
       if (hasError || !fullResponse) {
-        const response = await chatApi.sendMessage(message, conversationId, currentMode);
+        const response = await chatApi.sendMessage(currentMode, message, conversationId);
         fullResponse = response.content;
         
         // Update conversation ID if new
