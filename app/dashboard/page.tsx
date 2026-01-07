@@ -199,11 +199,11 @@ export default function Dashboard() {
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <div className="bg-[#1a0a2e]/80 backdrop-blur-sm border-b border-[#7B3FF2]/20 px-6 py-4 flex items-center justify-between">
+          <div className="bg-[#2d1b4e]/60 backdrop-blur-md border-b border-[#7B3FF2]/30 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="md:hidden p-2 hover:bg-[#2d1b4e] rounded-lg transition-colors"
+                className="md:hidden p-2 hover:bg-[#2d1b4e]/80 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] rounded-lg transition-all duration-300"
               >
                 {sidebarOpen ? <X size={24} className="text-white" /> : <Menu size={24} className="text-white" />}
               </button>
@@ -216,7 +216,7 @@ export default function Dashboard() {
               
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 hover:bg-[#2d1b4e] rounded-lg transition-colors text-white"
+                className="flex items-center gap-2 px-4 py-2 hover:bg-[#2d1b4e]/80 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] rounded-lg transition-all duration-300 text-white"
               >
                 <LogOut size={20} />
                 <span className="hidden sm:inline">Logout</span>
@@ -258,7 +258,7 @@ export default function Dashboard() {
           </div>
 
           {/* Input Area */}
-          <div className="bg-[#1a0a2e]/80 backdrop-blur-sm border-t border-[#7B3FF2]/20 px-6 py-4">
+          <div className="bg-[#2d1b4e]/60 backdrop-blur-md border-t border-[#7B3FF2]/30 px-6 py-4">
             <div className="max-w-4xl mx-auto">
               <ChatInput
                 onSendMessage={handleSendMessage}
