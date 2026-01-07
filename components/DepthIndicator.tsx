@@ -1,6 +1,6 @@
 'use client';
 
-import { Brain, TrendingUp } from 'lucide-react';
+import { Brain } from 'lucide-react';
 
 interface DepthIndicatorProps {
   depth: number | null;
@@ -35,7 +35,7 @@ export default function DepthIndicator({ depth, enabled }: DepthIndicatorProps) 
   };
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-[#1a0a2e]/80 rounded-lg border border-[#7B3FF2]/20">
+    <div className="flex items-center gap-2 px-3 py-2 bg-[#2d1b4e]/60 backdrop-blur-md rounded-lg border border-[#7B3FF2]/30 hover:border-[#A78BFA]/50 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-all duration-300">
       <Brain size={18} className="text-[#A78BFA]" />
       <div className="flex flex-col">
         <div className="flex items-center gap-2">
@@ -44,7 +44,7 @@ export default function DepthIndicator({ depth, enabled }: DepthIndicatorProps) 
             {depthLevel} ({depthPercent}%)
           </span>
         </div>
-        <div className="w-24 h-1.5 bg-[#2d1b4e] rounded-full mt-1 overflow-hidden">
+        <div className="w-24 h-1.5 bg-[#1a0a2e]/50 rounded-full mt-1 overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500 ease-out"
             style={{
@@ -54,9 +54,6 @@ export default function DepthIndicator({ depth, enabled }: DepthIndicatorProps) 
           />
         </div>
       </div>
-      {depth > 0.75 && (
-        <TrendingUp size={16} className="text-[#A78BFA] animate-pulse" />
-      )}
     </div>
   );
 }
