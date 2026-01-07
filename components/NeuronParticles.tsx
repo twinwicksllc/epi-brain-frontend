@@ -49,7 +49,7 @@ export default function NeuronParticles() {
 
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(123, 63, 242, 0.5)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.fill();
       });
 
@@ -63,7 +63,7 @@ export default function NeuronParticles() {
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(123, 63, 242, ${0.2 * (1 - distance / 150)})`;
+            ctx.strokeStyle = `rgba(167, 139, 250, ${0.4 * (1 - distance / 150)})`;
             ctx.lineWidth = 1;
             ctx.stroke();
           }
@@ -91,7 +91,7 @@ export default function NeuronParticles() {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 pointer-events-none"
-      style={{ opacity: 0.3 }}
+      style={{ opacity: 0.6 }}
     />
   );
 }
