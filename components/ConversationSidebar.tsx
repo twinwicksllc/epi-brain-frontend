@@ -77,12 +77,12 @@ export default function ConversationSidebar({
   };
 
   return (
-    <div className="w-64 bg-[#1a0a2e] border-r border-[#7B3FF2]/20 flex flex-col">
+    <div className="w-64 bg-[#2d1b4e]/60 backdrop-blur-md border-r border-[#7B3FF2]/30 flex flex-col">
       {/* New Chat Button */}
-      <div className="p-4 border-b border-[#7B3FF2]/20">
+      <div className="p-4 border-b border-[#7B3FF2]/30">
         <button
           onClick={onNewConversation}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#7B3FF2] hover:bg-[#6B46C1] text-white rounded-lg transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#7B3FF2] hover:bg-[#6B46C1] hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] text-white rounded-lg transition-all duration-300"
         >
           <Plus size={20} />
           <span>New Chat</span>
@@ -105,10 +105,10 @@ export default function ConversationSidebar({
               <div
                 key={conversation.id}
                 onClick={() => onSelectConversation(conversation.id)}
-                className={`group flex items-center gap-3 p-3 mb-2 rounded-lg cursor-pointer transition-all ${
+                className={`group flex items-center gap-3 p-3 mb-2 rounded-lg cursor-pointer transition-all duration-300 ${
                   currentConversationId === conversation.id
-                    ? 'bg-[#7B3FF2]/20 border border-[#7B3FF2]/40'
-                    : 'hover:bg-[#2d1b4e] border border-transparent'
+                    ? 'bg-[#7B3FF2]/20 border border-[#7B3FF2]/40 shadow-[0_0_10px_rgba(123,63,242,0.3)]'
+                    : 'hover:bg-[#2d1b4e]/80 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] border border-transparent'
                 }`}
               >
                 <MessageSquare size={18} className="text-[#A78BFA] flex-shrink-0" />
@@ -122,7 +122,7 @@ export default function ConversationSidebar({
                 </div>
                 <button
                   onClick={(e) => handleDelete(conversation.id, e)}
-                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-all"
+                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 hover:shadow-[0_0_10px_rgba(239,68,68,0.3)] rounded transition-all duration-300"
                 >
                   <Trash2 size={16} className="text-red-400" />
                 </button>
