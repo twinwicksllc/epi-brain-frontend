@@ -83,7 +83,7 @@ export default function ModeSelector({ currentMode, onModeChange }: ModeSelector
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-4 py-2 bg-[#2d1b4e] hover:bg-[#3d2b5e] border border-[#7B3FF2]/30 rounded-lg transition-colors"
+        className="flex items-center gap-3 px-4 py-2 bg-[#2d1b4e]/60 backdrop-blur-md hover:bg-[#3d2b5e]/60 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] border border-[#7B3FF2]/30 rounded-lg transition-all duration-300"
       >
         <span className="text-2xl">{currentModeIcon}</span>
         <span className="text-white font-medium">{currentModeName}</span>
@@ -102,7 +102,7 @@ export default function ModeSelector({ currentMode, onModeChange }: ModeSelector
           />
 
           {/* Dropdown */}
-          <div className="absolute top-full left-0 mt-2 w-80 bg-[#1a0a2e] border border-[#7B3FF2]/30 rounded-lg shadow-2xl z-20 max-h-96 overflow-y-auto">
+          <div className="absolute top-full left-0 mt-2 w-80 bg-[#2d1b4e]/80 backdrop-blur-md border border-[#7B3FF2]/30 rounded-lg shadow-2xl z-20 max-h-96 overflow-y-auto">
             {modes.map((mode) => (
               <button
                 key={mode.id}
@@ -110,8 +110,8 @@ export default function ModeSelector({ currentMode, onModeChange }: ModeSelector
                   onModeChange(mode.id);
                   setIsOpen(false);
                 }}
-                className={`w-full flex items-start gap-3 p-4 hover:bg-[#2d1b4e] transition-colors text-left ${
-                  currentMode === mode.id ? 'bg-[#7B3FF2]/20' : ''
+                className={`w-full flex items-start gap-3 p-4 hover:bg-[#3d2b5e]/60 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-all duration-300 text-left ${
+                  currentMode === mode.id ? 'bg-[#7B3FF2]/20 shadow-[0_0_10px_rgba(123,63,242,0.3)]' : ''
                 }`}
               >
                 <span className="text-2xl flex-shrink-0">{MODE_ICONS[mode.id]}</span>
