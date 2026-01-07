@@ -77,7 +77,7 @@ export default function ConversationSidebar({
   };
 
   return (
-    <div className="w-64 bg-[#2d1b4e]/60 backdrop-blur-md border-r border-[#7B3FF2]/30 flex flex-col">
+    <div className="w-64 bg-[#2d1b4e] border-r border-[#7B3FF2]/30 flex flex-col">
       {/* New Chat Button */}
       <div className="p-4 border-b border-[#7B3FF2]/30">
         <button
