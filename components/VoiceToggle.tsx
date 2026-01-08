@@ -28,7 +28,7 @@ export default function VoiceToggle({
   const [errorMessage, setErrorMessage] = useState('');
 
   // Voice manager instance (singleton)
-  const voiceManagerRef = React.useRef<VoiceManager | null>(null);
+  const voiceManagerRef = useRef<VoiceManager | null>(null);
 
   // Initialize voice manager
   useEffect(() => {
