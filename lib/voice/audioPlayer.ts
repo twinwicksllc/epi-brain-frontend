@@ -58,11 +58,6 @@ export class AudioPlayer {
           this.playNext().then(resolve).catch(reject);
         };
         
-        this.sourceNode!.onerror = (error) => {
-          this.isPlaying = false;
-          reject(error);
-        };
-        
         this.sourceNode!.start(0);
       });
     } catch (error) {
