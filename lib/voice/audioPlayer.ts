@@ -19,6 +19,9 @@ export class AudioPlayer {
 
     try {
       // Decode audio data
+      if (!this.audioContext) {
+        throw new Error('AudioContext not initialized');
+      }
       const audioBuffer = await this.audioContext.decodeAudioData(audioData);
       this.audioQueue.push(audioBuffer);
       
@@ -43,6 +46,9 @@ export class AudioPlayer {
     this.currentBuffer = audioBuffer;
 
     try {
+      if (!this.audioContext) {
+        throw new Error('AudioContext not initialized');
+      }
       this.sourceNode = this.audioContext.createBufferSource();
       this.sourceNode.buffer = audioBuffer;
       this.sourceNode.connect(this.audioContext.destination);
