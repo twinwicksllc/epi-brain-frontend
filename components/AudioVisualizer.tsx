@@ -11,7 +11,7 @@ interface AudioVisualizerProps {
 
 export default function AudioVisualizer({ isPlaying, isMuted, onToggleMute }: AudioVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
   const [barHeights, setBarHeights] = useState<number[]>([]);
 
   // Initialize bar heights
