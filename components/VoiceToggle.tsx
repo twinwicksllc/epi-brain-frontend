@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { getVoiceForMode, isModeVoiceEnabled } from '@/lib/voice/types';
 import { voiceApi } from '@/lib/api/voiceApi';
