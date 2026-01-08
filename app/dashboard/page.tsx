@@ -8,7 +8,12 @@ import ModeSelector from '@/components/ModeSelector';
 import MessageBubble from '@/components/MessageBubble';
 import ChatInput from '@/components/ChatInput';
 import DepthIndicator from '@/components/DepthIndicator';
+import VoiceToggle from '@/components/VoiceToggle';
+import GenderSelector from '@/components/GenderSelector';
+import AudioVisualizer from '@/components/AudioVisualizer';
 import { chatApi, authApi } from '@/lib/api/client';
+import { voiceApi } from '@/lib/api/voiceApi';
+import VoiceManager from '@/lib/voice/voiceManager';
 import { streamChatResponse, simulateStreaming } from '@/lib/streaming';
 import { getDepthGradient } from '@/lib/utils/depthColors';
 import { LogOut, Menu, X } from 'lucide-react';
@@ -32,6 +37,22 @@ export default function Dashboard() {
   const [currentDepth, setCurrentDepth] = useState<number | null>(null);
   const [depthEnabled, setDepthEnabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Voice states
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceGender, setVoiceGender] = useState<'male' | 'female'>('male');
+  const [isVoicePlaying, setIsVoicePlaying] = useState(false);
+  const [isVoiceMuted, setIsVoiceMuted] = useState(false);
+  const voiceManagerRef = useRef<VoiceManager | null>(null);
+  const [token, setToken] = useState<string>('');
+  
+  // Get auth token for voice
+  useEffect(() => {
+    const accessToken = localStorage.getItem('access_token');
+    if (accessToken) {
+      setToken(accessToken);
+    }
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -40,6 +61,20 @@ export default function Dashboard() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingMessage]);
+
+  // Initialize voice manager
+  useEffect(() => {
+    if (!voiceManagerRef.current) {
+      voiceManagerRef.current = new VoiceManager();
+    }
+
+    return () => {
+      if (voiceManagerRef.current) {
+        voiceManagerRef.current.destroy();
+        voiceManagerRef.current = null;
+      }
+    };
+  }, []);
 
   const handleSendMessage = async (message: string) => {
     if (isLoading || isStreaming) return;
@@ -113,6 +148,15 @@ export default function Dashboard() {
       };
       setMessages(prev => [...prev, assistantMessage]);
       setStreamingMessage('');
+      
+      // Play voice if enabled
+      if (voiceEnabled && voiceManagerRef.current && !isVoiceMuted) {
+        try {
+          await voiceManagerRef.current.speak(fullResponse, currentMode);
+        } catch (error) {
+          console.error('Voice playback error:', error);
+        }
+      }
     } catch (error) {
       console.error('Failed to send message:', error);
       const errorMessage: Message = {
@@ -214,6 +258,25 @@ export default function Dashboard() {
             <div className="flex items-center gap-4">
               <DepthIndicator depth={currentDepth} enabled={depthEnabled} />
               
+              {/* Voice Controls */}
+              {token && (
+                <>
+                  <GenderSelector
+                    mode={currentMode}
+                    gender={voiceGender}
+                    onGenderChange={setVoiceGender}
+                    disabled={!voiceEnabled}
+                  />
+                  <VoiceToggle
+                    mode={currentMode}
+                    token={token}
+                    gender={voiceGender}
+                    onGenderChange={setVoiceGender}
+                    onVoiceEnabled={(enabled) => setVoiceEnabled(enabled)}
+                  />
+                </>
+              )}
+              
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-4 py-2 hover:bg-[#2d1b4e]/80 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] rounded-lg transition-all duration-300 text-white"
@@ -251,6 +314,17 @@ export default function Dashboard() {
                   isStreaming={true}
                   currentDepth={currentDepth}
                 />
+              )}
+
+              {/* Audio Visualizer */}
+              {voiceEnabled && (isVoicePlaying || streamingMessage) && (
+                <div className="flex justify-center my-4">
+                  <AudioVisualizer
+                    isPlaying={isVoicePlaying || isStreaming}
+                    isMuted={isVoiceMuted}
+                    onToggleMute={() => setIsVoiceMuted(!isVoiceMuted)}
+                  />
+                </div>
               )}
 
               <div ref={messagesEndRef} />
