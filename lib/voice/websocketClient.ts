@@ -49,9 +49,9 @@ export class VoiceStreamClient {
         }
       };
 
-      this.ws.onerror = (error) => {
+      this.ws.onerror = (error: any) => {
         console.error('WebSocket error:', error);
-        this.options.onError?.(error as Error);
+        this.options.onError?.(new Error(error?.message || 'WebSocket error'));
       };
 
       this.ws.onclose = () => {
