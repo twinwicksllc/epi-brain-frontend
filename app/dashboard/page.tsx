@@ -65,29 +65,48 @@ export default function DashboardPage() {
   }, [messages, streamingMessage]);
 
   useEffect(() => {
-    // Check if user is authenticated
-    if (!isAuthenticated()) {
-      router.push("/login");
-      return;
-    }
+    const initDashboard = async () => {
+      try {
+        // Check if user is authenticated
+        if (!isAuthenticated()) {
+          router.push("/login");
+          return;
+        }
 
-    // Load user data from localStorage
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-      loadAvailableModes();
-      loadConversations();
-      // Close sidebar by default on mobile
-      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-        setIsSidebarOpen(false);
+        // Load user data from localStorage
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          setUser(JSON.parse(userData));
+          
+          // Load available modes and conversations
+          await Promise.all([
+            loadAvailableModes(),
+            loadConversations()
+          ]);
+          
+          // Close sidebar by default on mobile
+          if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+            setIsSidebarOpen(false);
+          }
+        } else {
+          // No user data, redirect to login
+          router.push("/login");
+          return;
+        }
+        
+        // Load voice gender preference
+        const voiceGenderPref = localStorage.getItem('voiceGender');
+        if (voiceGenderPref && (voiceGenderPref === 'male' || voiceGenderPref === 'female')) {
+          setVoiceGender(voiceGenderPref);
+        }
+      } catch (error) {
+        console.error("Dashboard initialization error:", error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    // Load voice gender preference
-    const voiceGenderPref = localStorage.getItem('voiceGender');
-    if (voiceGenderPref && (voiceGenderPref === 'male' || voiceGenderPref === 'female')) {
-      setVoiceGender(voiceGenderPref);
-    }
-    setIsLoading(false);
+    };
+
+    initDashboard();
   }, [router]);
 
   const loadAvailableModes = async () => {
@@ -98,8 +117,22 @@ export default function DashboardPage() {
       if (defaultMode) {
         setCurrentMode(defaultMode);
       }
+      return modes;
     } catch (error) {
       console.error("Failed to load modes:", error);
+      // Set a default mode if API fails
+      const fallbackMode: AI_MODE = {
+        id: "personal_friend",
+        name: "Personal Friend",
+        description: "Your companion",
+        icon: "💬",
+        color: "#7B3FF2",
+        system_prompt: "",
+        is_default: true
+      };
+      setCurrentMode(fallbackMode);
+      setAvailableModes([fallbackMode]);
+      return [fallbackMode];
     }
   };
 
@@ -110,10 +143,13 @@ export default function DashboardPage() {
       
       // Load the most recent conversation if no conversation is selected
       if (convs.length > 0 && !currentConversationId) {
-        loadConversation(convs[0].id);
+        await loadConversation(convs[0].id);
       }
+      return convs;
     } catch (error) {
       console.error("Failed to load conversations:", error);
+      setConversations([]);
+      return [];
     }
   };
 
@@ -212,16 +248,15 @@ export default function DashboardPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto mb-4"></div>
+          <div className="text-white text-xl">Loading EPI Brain...</div>
+        </div>
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
   }
 
   const bgGradient = getDepthGradient(currentDepth);
@@ -244,14 +279,16 @@ export default function DashboardPage() {
               <h1 className="text-xl font-bold text-white">EPI Brain</h1>
             </div>
             <div className="flex items-center gap-2">
-              {currentMode && (
+              {currentMode && typeof window !== 'undefined' && (
                 <VoiceToggle
                   mode={currentMode.id}
-                  token={localStorage.getItem('token') || ''}
+                  token={typeof window !== 'undefined' ? (localStorage.getItem('token') || '') : ''}
                   gender={voiceGender}
                   onGenderChange={(gender) => {
                     setVoiceGender(gender);
-                    localStorage.setItem('voiceGender', gender);
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('voiceGender', gender);
+                    }
                   }}
                 />
               )}
