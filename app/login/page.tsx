@@ -19,12 +19,27 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await authApi.login(email, password);
+      // Set a timeout for the login request
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Login timeout')), 10000); // 10 second timeout
+      });
+
+      const response = await Promise.race([
+        authApi.login(email, password),
+        timeoutPromise
+      ]) as any;
       
-      // Store tokens
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
-      localStorage.setItem('token', response.access_token); // For VoiceToggle
+      // Store tokens efficiently
+      const tokenData = {
+        access_token: response.access_token,
+        refresh_token: response.refresh_token,
+        token: response.access_token
+      };
+      
+      // Batch localStorage operations
+      Object.entries(tokenData).forEach(([key, value]) => {
+        localStorage.setItem(key, value as string);
+      });
       
       // Store user data
       if (response.user) {
@@ -32,9 +47,9 @@ export default function Login() {
       } else {
         // Create minimal user object if not provided
         const user = {
-          id: email, // Use email as fallback ID
+          id: email,
           email: email,
-          name: email.split('@')[0], // Use part before @ as name
+          name: email.charAt(0).toUpperCase(), // Use first letter of email as name
           tier: 'FREE'
         };
         localStorage.setItem('user', JSON.stringify(user));
@@ -44,7 +59,11 @@ export default function Login() {
       router.push('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.response?.data?.detail || 'Login failed. Please try again.');
+      if (err.message === 'Login timeout') {
+        setError('Login is taking too long. Please try again.');
+      } else {
+        setError(err.response?.data?.detail || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

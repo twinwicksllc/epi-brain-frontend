@@ -217,11 +217,15 @@ export default function DashboardPage() {
     setIsSendingMessage(true);
 
     try {
+      console.log("Sending message:", { mode: currentMode.id, content, conversationId: currentConversationId });
+      
       const response = await chatApi.sendMessage(
         currentMode.id,
         content,
         currentConversationId || undefined
       );
+
+      console.log("Received response:", response);
 
       if (response.response) {
         const assistantMessage: Message = {
@@ -243,9 +247,19 @@ export default function DashboardPage() {
             )
           );
         }
+      } else {
+        console.error("No response in API response:", response);
       }
     } catch (error) {
       console.error("Failed to send message:", error);
+      // Add error message to chat
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        content: "Sorry, I encountered an error. Please try again.",
+        role: "assistant",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsSendingMessage(false);
     }
