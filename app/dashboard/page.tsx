@@ -1,354 +1,346 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import ConversationSidebar from '@/components/ConversationSidebar';
-import ModeSelector from '@/components/ModeSelector';
-import MessageBubble from '@/components/MessageBubble';
-import ChatInput from '@/components/ChatInput';
-import DepthIndicator from '@/components/DepthIndicator';
-import VoiceToggle from '@/components/VoiceToggle';
-import GenderSelector from '@/components/GenderSelector';
-import AudioVisualizer from '@/components/AudioVisualizer';
-import { chatApi, authApi } from '@/lib/api/client';
-import { voiceApi } from '@/lib/api/voiceApi';
-import VoiceManager from '@/lib/voice/voiceManager';
-import { streamChatResponse, simulateStreaming } from '@/lib/streaming';
-import { getDepthGradient } from '@/lib/utils/depthColors';
-import { LogOut, Menu, X } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
+import { authApi, chatApi, modesApi, userApi } from "@/lib/api/client";
+import { ModeSelector } from "@/components/ModeSelector";
+import { ConversationSidebar } from "@/components/ConversationSidebar";
+import { ChatInput } from "@/components/ChatInput";
+import { MessageBubble } from "@/components/MessageBubble";
+import { VoiceToggle } from "@/components/VoiceToggle";
+import { getDepthGradient } from "@/lib/utils/depthColors";
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant';
   content: string;
-  timestamp: string;
+  role: "user" | "assistant";
+  timestamp: Date;
 }
 
-export default function Dashboard() {
+interface Conversation {
+  id: string;
+  title: string;
+  mode: string;
+  created_at: Date;
+  updated_at: Date;
+  message_count: number;
+}
+
+interface AI_MODE {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  system_prompt: string;
+  is_default?: boolean;
+}
+
+export default function DashboardPage() {
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [currentMode, setCurrentMode] = useState('personal_friend');
-  const [conversationId, setConversationId] = useState<string | undefined>();
-  const [isLoading, setIsLoading] = useState(false);
-  const [streamingMessage, setStreamingMessage] = useState('');
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentDepth, setCurrentDepth] = useState<number | null>(null);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [currentMode, setCurrentMode] = useState<AI_MODE | null>(null);
+  const [availableModes, setAvailableModes] = useState<AI_MODE[]>([]);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState<string>("");
+  const [currentDepth, setCurrentDepth] = useState(0.0);
   const [depthEnabled, setDepthEnabled] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Voice states
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [voiceGender, setVoiceGender] = useState<'male' | 'female'>('male');
-  const [isVoicePlaying, setIsVoicePlaying] = useState(false);
-  const [isVoiceMuted, setIsVoiceMuted] = useState(false);
-  const voiceManagerRef = useRef<VoiceManager | null>(null);
-  const [token, setToken] = useState<string>('');
-  
-  // Get auth token for voice
-  useEffect(() => {
-    const accessToken = localStorage.getItem('access_token');
-    if (accessToken) {
-      setToken(accessToken);
-    }
-  }, []);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingMessage]);
 
-  // Initialize voice manager
   useEffect(() => {
-    if (!voiceManagerRef.current) {
-      voiceManagerRef.current = new VoiceManager();
+    if (!isLoading && !user) {
+      router.push("/login");
+      return;
     }
 
-    return () => {
-      if (voiceManagerRef.current) {
-        voiceManagerRef.current.destroy();
-        voiceManagerRef.current = null;
+    if (user) {
+      loadAvailableModes();
+      loadConversations();
+      // Close sidebar by default on mobile
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
       }
-    };
-  }, []);
+    }
+  }, [user, isLoading, router]);
 
-  const handleSendMessage = async (message: string) => {
-    if (isLoading || isStreaming) return;
-
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: message,
-      timestamp: new Date().toISOString(),
-    };
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-    setIsStreaming(true);
-    setStreamingMessage('');
-
+  const loadAvailableModes = async () => {
     try {
-      // Try streaming first
-      let fullResponse = '';
-      let hasError = false;
-
-      try {
-        for await (const chunk of streamChatResponse(message, conversationId, currentMode)) {
-          if (chunk.type === 'token' && chunk.content) {
-            fullResponse += chunk.content;
-            setStreamingMessage(fullResponse);
-          } else if (chunk.type === 'error') {
-            hasError = true;
-            console.error('Streaming error:', chunk.error);
-            break;
-          } else if (chunk.type === 'done') {
-            break;
-          }
-        }
-      } catch (streamError) {
-        console.warn('Streaming failed, falling back to regular API:', streamError);
-        hasError = true;
-      }
-
-      // Fallback to regular API if streaming failed
-      if (hasError || !fullResponse) {
-        const response = await chatApi.sendMessage(currentMode, message, conversationId);
-        fullResponse = response.content;
-        
-        // Update conversation ID if new
-        if (!conversationId && response.conversation_id) {
-          setConversationId(response.conversation_id);
-        }
-
-        // Update depth if provided
-        if (response.depth !== undefined && response.depth !== null) {
-          setCurrentDepth(response.depth);
-          setDepthEnabled(true);
-        }
-
-        // Simulate streaming for the response
-        setStreamingMessage('');
-        for await (const chunk of simulateStreaming(fullResponse)) {
-          if (chunk.type === 'token' && chunk.content) {
-            setStreamingMessage(prev => prev + chunk.content);
-          }
-        }
-      }
-
-      // Add assistant message
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: fullResponse,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-      setStreamingMessage('');
-      
-      // Play voice if enabled
-      if (voiceEnabled && voiceManagerRef.current && !isVoiceMuted) {
-        try {
-          await voiceManagerRef.current.speak(fullResponse, currentMode);
-        } catch (error) {
-          console.error('Voice playback error:', error);
-        }
+      const modes = await modesApi.getModes();
+      setAvailableModes(modes);
+      const defaultMode = modes.find((mode: AI_MODE) => mode.is_default);
+      if (defaultMode) {
+        setCurrentMode(defaultMode);
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
-        timestamp: new Date().toISOString(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
-      setStreamingMessage('');
-    } finally {
-      setIsLoading(false);
-      setIsStreaming(false);
+      console.error("Failed to load modes:", error);
     }
   };
 
-  const handleSelectConversation = async (id: string) => {
+  const loadConversations = async () => {
     try {
-      const conversation = await chatApi.getConversation(id);
-      setConversationId(id);
-      setCurrentMode(conversation.mode || 'personal_friend');
+      const convs = await chatApi.getConversations();
+      setConversations(convs);
       
-      // Load messages
-      const loadedMessages: Message[] = conversation.messages.map((msg: any) => ({
-        id: msg.id,
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.timestamp,
-      }));
-      setMessages(loadedMessages);
+      // Load the most recent conversation if no conversation is selected
+      if (convs.length > 0 && !currentConversationId) {
+        loadConversation(convs[0].id);
+      }
+    } catch (error) {
+      console.error("Failed to load conversations:", error);
+    }
+  };
 
-      // Fetch current depth
-      try {
-        const depthInfo = await chatApi.getConversationDepth(id);
-        setCurrentDepth(depthInfo.depth);
-        setDepthEnabled(depthInfo.enabled);
-      } catch (depthError) {
-        console.warn('Could not fetch depth info:', depthError);
-        setCurrentDepth(null);
+  const loadConversation = async (conversationId: string) => {
+    setIsLoadingMessages(true);
+    try {
+      const conversationData = await chatApi.getConversation(conversationId);
+      setMessages(conversationData.messages || []);
+      setCurrentConversationId(conversationId);
+      setCurrentDepth(conversationData.current_depth || 0.0);
+      setDepthEnabled(conversationData.depth_enabled || false);
+      // Close sidebar on mobile after selecting conversation
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      }
+    } catch (error) {
+      console.error("Failed to load conversation:", error);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
+
+  const createNewConversation = async () => {
+    try {
+      const newConversation = await chatApi.createConversation({
+        title: "New Chat",
+        mode: currentMode?.id || "personal_friend",
+      });
+      
+      setConversations([newConversation, ...conversations]);
+      loadConversation(newConversation.id);
+    } catch (error) {
+      console.error("Failed to create conversation:", error);
+    }
+  };
+
+  const deleteConversation = async (conversationId: string) => {
+    try {
+      await chatApi.deleteConversation(conversationId);
+      
+      setConversations(conversations.filter(conv => conv.id !== conversationId));
+      
+      if (currentConversationId === conversationId) {
+        setCurrentConversationId(null);
+        setMessages([]);
+        setCurrentDepth(0.0);
         setDepthEnabled(false);
       }
     } catch (error) {
-      console.error('Failed to load conversation:', error);
+      console.error("Failed to delete conversation:", error);
     }
   };
 
-  const handleNewConversation = () => {
-    setConversationId(undefined);
-    setMessages([]);
-    setCurrentMode('personal_friend');
-    setCurrentDepth(null);
-    setDepthEnabled(false);
-  };
+  const sendMessage = async (content: string) => {
+    if (!content.trim() || !currentMode) return;
 
-  const handleModeChange = (modeId: string) => {
-    setCurrentMode(modeId);
-  };
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      content,
+      role: "user",
+      timestamp: new Date(),
+    };
 
-  const handleLogout = async () => {
+    setMessages(prev => [...prev, userMessage]);
+    setIsSendingMessage(true);
+
     try {
-      await authApi.logout();
+      // For streaming, we'll use a simplified version for now
+      const response = await chatApi.sendMessage(
+        currentMode.id,
+        content,
+        currentConversationId || undefined
+      );
+
+      if (response.response) {
+        const assistantMessage: Message = {
+          id: `assistant-${Date.now()}`,
+          content: response.response,
+          role: "assistant",
+          timestamp: new Date(),
+        };
+
+        setMessages(prev => [...prev, assistantMessage]);
+        setCurrentDepth(response.current_depth || 0.0);
+
+        // Update conversation in list
+        if (response.conversation) {
+          setConversations(prev => 
+            prev.map(conv => 
+              conv.id === response.conversation.id 
+                ? { ...conv, ...response.conversation }
+                : conv
+            )
+          );
+        }
+      }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Failed to send message:", error);
     } finally {
-      router.push('/login');
+      setIsSendingMessage(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login
+  }
+
+  const bgGradient = getDepthGradient(currentDepth);
 
   return (
-    <ProtectedRoute>
-      <div 
-        className="flex h-screen transition-all duration-1000 ease-in-out"
-        style={{ background: getDepthGradient(currentDepth) }}
-      >
-        {/* Sidebar */}
-        <div className={`${sidebarOpen ? 'block' : 'hidden'} md:block`}>
-          <ConversationSidebar
-            currentConversationId={conversationId}
-            onSelectConversation={handleSelectConversation}
-            onNewConversation={handleNewConversation}
-          />
-        </div>
-
-        {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <div className="bg-[#2d1b4e]/60 backdrop-blur-md border-b border-[#7B3FF2]/30 px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
+      {/* Header */}
+      <div className="bg-[#2d1b4e]/80 backdrop-blur-md border-b border-[#7B3FF2]/30">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="md:hidden p-2 hover:bg-[#2d1b4e]/80 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] rounded-lg transition-all duration-300"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="lg:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
               >
-                {sidebarOpen ? <X size={24} className="text-white" /> : <Menu size={24} className="text-white" />}
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
               </button>
-              
-              <ModeSelector currentMode={currentMode} onModeChange={handleModeChange} />
+              <h1 className="text-xl font-bold text-white">EPI Brain</h1>
             </div>
-
-            <div className="flex items-center gap-2 md:gap-4">
-              {/* Hide depth indicator on mobile */}
-              <div className="hidden md:block">
-                <DepthIndicator depth={currentDepth} enabled={depthEnabled} />
-              </div>
-              
-              {/* Voice Controls - Show on all screens */}
-              {token && (
-                <>
-                  {/* Hide gender selector on mobile, show on tablet+ */}
-                  <div className="hidden sm:block">
-                    <GenderSelector
-                      mode={currentMode}
-                      gender={voiceGender}
-                      onGenderChange={setVoiceGender}
-                      disabled={!voiceEnabled}
-                    />
+            <div className="flex items-center gap-2">
+              <VoiceToggle />
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-[#7B3FF2] rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-white">
+                      {user?.name?.[0]?.toUpperCase() || 'U'}
+                    </span>
                   </div>
-                  <VoiceToggle
-                    mode={currentMode}
-                    token={token}
-                    gender={voiceGender}
-                    onGenderChange={setVoiceGender}
-                    onVoiceEnabled={(enabled) => setVoiceEnabled(enabled)}
-                  />
-                </>
-              )}
-              
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-2 md:px-4 py-2 hover:bg-[#2d1b4e]/80 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] rounded-lg transition-all duration-300 text-white"
-              >
-                <LogOut size={20} />
-                <span className="hidden sm:inline">Logout</span>
-              </button>
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
 
+      <div className="flex h-[calc(100vh-72px)] relative">
+        {/* Mobile sidebar overlay */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+        
+        {/* Sidebar */}
+        <ConversationSidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          conversations={conversations}
+          currentConversationId={currentConversationId}
+          onSelectConversation={loadConversation}
+          onNewConversation={createNewConversation}
+          onDeleteConversation={deleteConversation}
+        />
+
+        {/* Main Content - Full width on mobile */}
+        <div className="flex-1 flex flex-col w-full min-w-0">
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto px-6 py-8">
-            <div className="max-w-4xl mx-auto">
-              {messages.length === 0 && !streamingMessage && (
-                <div className="text-center text-gray-400 mt-20">
-                  <div className="text-6xl mb-4">💬</div>
-                  <h2 className="text-2xl font-bold mb-2 text-white">Start a conversation</h2>
-                  <p>Choose a personality mode and send a message to begin</p>
-                </div>
-              )}
-
-              {messages.map((message) => (
-                <MessageBubble
-                  key={message.id}
-                  role={message.role}
-                  content={message.content}
-                  currentDepth={currentDepth}
-                />
-              ))}
-
-              {streamingMessage && (
-                <MessageBubble
-                  role="assistant"
-                  content={streamingMessage}
-                  isStreaming={true}
-                  currentDepth={currentDepth}
-                />
-              )}
-
-              {/* Audio Visualizer */}
-              {voiceEnabled && (isVoicePlaying || streamingMessage) && (
-                <div className="flex justify-center my-4">
-                  <AudioVisualizer
-                    isPlaying={isVoicePlaying || isStreaming}
-                    isMuted={isVoiceMuted}
-                    onToggleMute={() => setIsVoiceMuted(!isVoiceMuted)}
+          <div 
+            className="flex-1 overflow-y-auto px-4 py-6 transition-all duration-1000"
+            style={{
+              background: bgGradient,
+              minHeight: '400px'
+            }}
+          >
+            {isLoadingMessages ? (
+              <div className="text-center text-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <p>Loading conversation...</p>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="text-center text-white">
+                <h2 className="text-2xl font-semibold mb-4">Welcome to EPI Brain</h2>
+                <p className="text-lg opacity-80">
+                  {currentMode ? `Chat with ${currentMode.name}` : "Select a mode to start chatting"}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4 max-w-4xl mx-auto">
+                {messages.map((message, index) => (
+                  <MessageBubble
+                    key={`${message.id}-${index}`}
+                    message={message}
+                    isUser={message.role === "user"}
+                    currentDepth={currentDepth}
                   />
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
+                ))}
+                {streamingMessage && (
+                  <MessageBubble
+                    message={{
+                      id: "streaming",
+                      content: streamingMessage,
+                      role: "assistant",
+                      timestamp: new Date(),
+                    }}
+                    isUser={false}
+                    currentDepth={currentDepth}
+                  />
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
           </div>
 
-          {/* Input Area */}
-          <div className="bg-[#2d1b4e]/60 backdrop-blur-md border-t border-[#7B3FF2]/30 px-6 py-4">
+          {/* Input Area - Fixed at bottom */}
+          <div className="bg-[#2d1b4e]/80 backdrop-blur-md border-t border-[#7B3FF2]/30 px-4 py-4">
             <div className="max-w-4xl mx-auto">
               <ChatInput
-                onSendMessage={handleSendMessage}
-                disabled={isLoading || isStreaming}
-                placeholder={`Message ${currentMode.replace('_', ' ')}...`}
+                onSendMessage={sendMessage}
+                isLoading={isSendingMessage}
+                placeholder={
+                  currentMode
+                    ? `Message ${currentMode.name}...`
+                    : "Select a mode to start chatting..."
+                }
+                disabled={!currentMode}
               />
             </div>
           </div>
         </div>
       </div>
-    </ProtectedRoute>
+    </div>
   );
 }
