@@ -326,7 +326,7 @@ export default function DashboardPage() {
                 >
                   <div className="w-8 h-8 bg-[#7B3FF2] rounded-full flex items-center justify-center">
                     <span className="text-sm font-medium text-white">
-                      {user?.name?.[0]?.toUpperCase() || 'U'}
+                      {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
                     </span>
                   </div>
                 </button>
