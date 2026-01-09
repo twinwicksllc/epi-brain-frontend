@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth";
+import { isAuthenticated } from "@/lib/auth";
 import { authApi, chatApi, modesApi, userApi } from "@/lib/api/client";
-import { ModeSelector } from "@/components/ModeSelector";
+import ModeSelector from "@/components/ModeSelector";
 import { ConversationSidebar } from "@/components/ConversationSidebar";
-import { ChatInput } from "@/components/ChatInput";
-import { MessageBubble } from "@/components/MessageBubble";
-import { VoiceToggle } from "@/components/VoiceToggle";
+import ChatInput from "@/components/ChatInput";
+import MessageBubble from "@/components/MessageBubble";
+import VoiceToggle from "@/components/VoiceToggle";
 import { getDepthGradient } from "@/lib/utils/depthColors";
 
 interface Message {
@@ -38,8 +38,9 @@ interface AI_MODE {
 }
 
 export default function DashboardPage() {
-  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -52,6 +53,7 @@ export default function DashboardPage() {
   const [depthEnabled, setDepthEnabled] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [voiceGender, setVoiceGender] = useState<'male' | 'female'>('female');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -63,20 +65,30 @@ export default function DashboardPage() {
   }, [messages, streamingMessage]);
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    // Check if user is authenticated
+    if (!isAuthenticated()) {
       router.push("/login");
       return;
     }
 
-    if (user) {
+    // Load user data from localStorage
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
       loadAvailableModes();
       loadConversations();
       // Close sidebar by default on mobile
-      if (window.innerWidth < 1024) {
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
         setIsSidebarOpen(false);
       }
     }
-  }, [user, isLoading, router]);
+    // Load voice gender preference
+    const voiceGenderPref = localStorage.getItem('voiceGender');
+    if (voiceGenderPref && (voiceGenderPref === 'male' || voiceGenderPref === 'female')) {
+      setVoiceGender(voiceGenderPref);
+    }
+    setIsLoading(false);
+  }, [router]);
 
   const loadAvailableModes = async () => {
     try {
@@ -114,7 +126,7 @@ export default function DashboardPage() {
       setCurrentDepth(conversationData.current_depth || 0.0);
       setDepthEnabled(conversationData.depth_enabled || false);
       // Close sidebar on mobile after selecting conversation
-      if (window.innerWidth < 1024) {
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
         setIsSidebarOpen(false);
       }
     } catch (error) {
@@ -124,17 +136,14 @@ export default function DashboardPage() {
     }
   };
 
-  const createNewConversation = async () => {
-    try {
-      const newConversation = await chatApi.createConversation({
-        title: "New Chat",
-        mode: currentMode?.id || "personal_friend",
-      });
-      
-      setConversations([newConversation, ...conversations]);
-      loadConversation(newConversation.id);
-    } catch (error) {
-      console.error("Failed to create conversation:", error);
+  const createNewConversation = () => {
+    setCurrentConversationId(null);
+    setMessages([]);
+    setCurrentDepth(0.0);
+    setDepthEnabled(false);
+    // Close sidebar on mobile after starting new conversation
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
     }
   };
 
@@ -169,7 +178,6 @@ export default function DashboardPage() {
     setIsSendingMessage(true);
 
     try {
-      // For streaming, we'll use a simplified version for now
       const response = await chatApi.sendMessage(
         currentMode.id,
         content,
@@ -187,7 +195,6 @@ export default function DashboardPage() {
         setMessages(prev => [...prev, assistantMessage]);
         setCurrentDepth(response.current_depth || 0.0);
 
-        // Update conversation in list
         if (response.conversation) {
           setConversations(prev => 
             prev.map(conv => 
@@ -214,7 +221,7 @@ export default function DashboardPage() {
   }
 
   if (!user) {
-    return null; // Will redirect to login
+    return null;
   }
 
   const bgGradient = getDepthGradient(currentDepth);
@@ -237,7 +244,17 @@ export default function DashboardPage() {
               <h1 className="text-xl font-bold text-white">EPI Brain</h1>
             </div>
             <div className="flex items-center gap-2">
-              <VoiceToggle />
+              {currentMode && (
+                <VoiceToggle
+                  mode={currentMode.id}
+                  token={localStorage.getItem('token') || ''}
+                  gender={voiceGender}
+                  onGenderChange={(gender) => {
+                    setVoiceGender(gender);
+                    localStorage.setItem('voiceGender', gender);
+                  }}
+                />
+              )}
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -275,8 +292,8 @@ export default function DashboardPage() {
           onDeleteConversation={deleteConversation}
         />
 
-        {/* Main Content - Full width on mobile */}
-        <div className="flex-1 flex flex-col w-full min-w-0">
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col w-full min-w-0 relative lg:static">
           {/* Messages Area */}
           <div 
             className="flex-1 overflow-y-auto px-4 py-6 transition-all duration-1000"
@@ -302,20 +319,16 @@ export default function DashboardPage() {
                 {messages.map((message, index) => (
                   <MessageBubble
                     key={`${message.id}-${index}`}
-                    message={message}
-                    isUser={message.role === "user"}
+                    role={message.role}
+                    content={message.content}
                     currentDepth={currentDepth}
                   />
                 ))}
                 {streamingMessage && (
                   <MessageBubble
-                    message={{
-                      id: "streaming",
-                      content: streamingMessage,
-                      role: "assistant",
-                      timestamp: new Date(),
-                    }}
-                    isUser={false}
+                    role="assistant"
+                    content={streamingMessage}
+                    isStreaming={true}
                     currentDepth={currentDepth}
                   />
                 )}
@@ -324,18 +337,17 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Input Area - Fixed at bottom */}
+          {/* Input Area */}
           <div className="bg-[#2d1b4e]/80 backdrop-blur-md border-t border-[#7B3FF2]/30 px-4 py-4">
             <div className="max-w-4xl mx-auto">
               <ChatInput
                 onSendMessage={sendMessage}
-                isLoading={isSendingMessage}
                 placeholder={
                   currentMode
                     ? `Message ${currentMode.name}...`
                     : "Select a mode to start chatting..."
                 }
-                disabled={!currentMode}
+                disabled={!currentMode || isSendingMessage}
               />
             </div>
           </div>
