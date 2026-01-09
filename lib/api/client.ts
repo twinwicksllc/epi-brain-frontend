@@ -14,8 +14,10 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
+    console.log('Request interceptor - token exists:', !!token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Request interceptor - adding auth header for:', config.url);
     }
     return config;
   },
@@ -26,8 +28,12 @@ apiClient.interceptors.request.use(
 
 // Response interceptor to handle token refresh
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('Response interceptor - success:', response.config.url, response.status);
+    return response;
+  },
   async (error) => {
+    console.log('Response interceptor - error:', error.config?.url, error.response?.status, error.response?.data);
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -81,11 +87,13 @@ export const authApi = {
 // Chat API
 export const chatApi = {
   sendMessage: async (mode: string, message: string, conversationId?: string) => {
+    console.log('chatApi.sendMessage called with:', { mode, message, conversationId });
     const response = await apiClient.post('/chat/message', {
       mode,
       message,
       conversation_id: conversationId,
     });
+    console.log('chatApi.sendMessage response:', response.data);
     return response.data;
   },
 
