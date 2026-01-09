@@ -255,18 +255,24 @@ export default function Dashboard() {
               <ModeSelector currentMode={currentMode} onModeChange={handleModeChange} />
             </div>
 
-            <div className="flex items-center gap-4">
-              <DepthIndicator depth={currentDepth} enabled={depthEnabled} />
+            <div className="flex items-center gap-2 md:gap-4">
+              {/* Hide depth indicator on mobile */}
+              <div className="hidden md:block">
+                <DepthIndicator depth={currentDepth} enabled={depthEnabled} />
+              </div>
               
-              {/* Voice Controls */}
+              {/* Voice Controls - Show on all screens */}
               {token && (
                 <>
-                  <GenderSelector
-                    mode={currentMode}
-                    gender={voiceGender}
-                    onGenderChange={setVoiceGender}
-                    disabled={!voiceEnabled}
-                  />
+                  {/* Hide gender selector on mobile, show on tablet+ */}
+                  <div className="hidden sm:block">
+                    <GenderSelector
+                      mode={currentMode}
+                      gender={voiceGender}
+                      onGenderChange={setVoiceGender}
+                      disabled={!voiceEnabled}
+                    />
+                  </div>
                   <VoiceToggle
                     mode={currentMode}
                     token={token}
@@ -279,7 +285,7 @@ export default function Dashboard() {
               
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 hover:bg-[#2d1b4e]/80 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] rounded-lg transition-all duration-300 text-white"
+                className="flex items-center gap-2 px-2 md:px-4 py-2 hover:bg-[#2d1b4e]/80 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)] rounded-lg transition-all duration-300 text-white"
               >
                 <LogOut size={20} />
                 <span className="hidden sm:inline">Logout</span>

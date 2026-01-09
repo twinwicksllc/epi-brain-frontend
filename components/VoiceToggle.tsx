@@ -174,13 +174,13 @@ export default function VoiceToggle({
           <VolumeX className="w-4 h-4" />
         )}
         
-        <span className="text-xs font-medium">
+        <span className="hidden sm:inline text-xs font-medium">
           {isLoading ? 'Loading...' : isEnabled ? 'Voice On' : 'Voice Off'}
         </span>
 
-        {/* Voice stats indicator */}
+        {/* Voice stats indicator - hide on mobile */}
         {isEnabled && voiceStats && voiceStats.remaining !== undefined && (
-          <span className="ml-1 text-xs opacity-80">
+          <span className="hidden sm:inline ml-1 text-xs opacity-80">
             ({voiceStats.remaining}/{voiceStats.limit})
           </span>
         )}
