@@ -21,11 +21,29 @@ export default function Login() {
     try {
       const response = await authApi.login(email, password);
       
+      // Store tokens
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('refresh_token', response.refresh_token);
+      localStorage.setItem('token', response.access_token); // For VoiceToggle
       
+      // Store user data
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify(response.user));
+      } else {
+        // Create minimal user object if not provided
+        const user = {
+          id: email, // Use email as fallback ID
+          email: email,
+          name: email.split('@')[0], // Use part before @ as name
+          tier: 'FREE'
+        };
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+      
+      console.log('Login successful, redirecting to dashboard...');
       router.push('/dashboard');
     } catch (err: any) {
+      console.error('Login error:', err);
       setError(err.response?.data?.detail || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
