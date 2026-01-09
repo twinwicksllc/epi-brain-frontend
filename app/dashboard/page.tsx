@@ -116,6 +116,9 @@ export default function DashboardPage() {
       const defaultMode = modes.find((mode: AI_MODE) => mode.is_default);
       if (defaultMode) {
         setCurrentMode(defaultMode);
+      } else if (modes.length > 0) {
+        // If no default mode, use the first one
+        setCurrentMode(modes[0]);
       }
       return modes;
     } catch (error) {
@@ -279,6 +282,16 @@ export default function DashboardPage() {
               <h1 className="text-xl font-bold text-white">EPI Brain</h1>
             </div>
             <div className="flex items-center gap-2">
+              <ModeSelector
+                currentMode={currentMode?.id || ''}
+                onModeChange={(modeId) => {
+                  const selectedMode = availableModes.find(mode => mode.id === modeId);
+                  if (selectedMode) {
+                    setCurrentMode(selectedMode);
+                  }
+                  // TODO: Add mode switching for existing conversations
+                }}
+              />
               {currentMode && typeof window !== 'undefined' && (
                 <VoiceToggle
                   mode={currentMode.id}
@@ -303,6 +316,29 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 </button>
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-[#2d1b4e] border border-[#7B3FF2]/30 rounded-lg shadow-lg z-50">
+                    <div className="p-4">
+                      <p className="text-white font-medium">{user?.name || 'User'}</p>
+                      <p className="text-gray-400 text-sm">{user?.email}</p>
+                      <p className="text-[#7B3FF2] text-xs mt-1">{user?.tier || 'FREE'}</p>
+                    </div>
+                    <div className="border-t border-[#7B3FF2]/20">
+                      <button
+                        onClick={() => {
+                          localStorage.removeItem('access_token');
+                          localStorage.removeItem('refresh_token');
+                          localStorage.removeItem('token');
+                          localStorage.removeItem('user');
+                          router.push('/login');
+                        }}
+                        className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/10 transition-colors"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
