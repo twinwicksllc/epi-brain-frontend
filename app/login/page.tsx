@@ -19,15 +19,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Set a timeout for the login request
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Login timeout')), 10000); // 10 second timeout
-      });
-
-      const response = await Promise.race([
-        authApi.login(email, password),
-        timeoutPromise
-      ]) as any;
+      const response = await authApi.login(email, password);
       
       // Store tokens efficiently
       const tokenData = {
@@ -59,11 +51,7 @@ export default function Login() {
       router.push('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
-      if (err.message === 'Login timeout') {
-        setError('Login is taking too long. Please try again.');
-      } else {
-        setError(err.response?.data?.detail || 'Login failed. Please try again.');
-      }
+      setError(err.response?.data?.detail || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
