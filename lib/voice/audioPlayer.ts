@@ -75,11 +75,8 @@ export class AudioPlayer {
           this.playNext().then(resolve).catch(reject);
         };
         
-        this.sourceNode!.onplay = () => {
-          console.log('AudioPlayer: Audio is playing');
-        };
-        
         this.sourceNode!.start(0);
+        console.log('AudioPlayer: Audio source started');
       });
     } catch (error) {
       console.error('Error playing audio:', error);
