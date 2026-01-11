@@ -278,11 +278,18 @@ export default function DashboardPage() {
         setCurrentDepth(response.depth || 0.0);
 
         // Trigger voice if enabled
-        if (voiceEnabled && currentMode) {
+        if (voiceEnabled && currentMode && response.content) {
+          console.log('🎤 Voice: Triggering TTS for AI response');
           const voiceModel = getVoiceForMode(currentMode.id, voiceGender);
+          console.log('🎤 Voice: Using voice model:', voiceModel?.id);
           if (voiceModel && voiceManagerRef.current) {
+            console.log('🎤 Voice: Speaking content:', response.content.substring(0, 50) + '...');
             voiceManagerRef.current.speak(response.content, currentMode.id);
+          } else {
+            console.log('🎤 Voice: No voice model or manager available');
           }
+        } else {
+          console.log('🎤 Voice: Not triggered - voiceEnabled:', voiceEnabled, 'currentMode:', !!currentMode, 'content:', !!response.content);
         }
 
         if (response.conversation) {
