@@ -227,16 +227,16 @@ export default function DashboardPage() {
 
       console.log("Received response:", response);
 
-      if (response.response) {
+      if (response.content) {
         const assistantMessage: Message = {
           id: `assistant-${Date.now()}`,
-          content: response.response,
+          content: response.content,
           role: "assistant",
           timestamp: new Date(),
         };
 
         setMessages(prev => [...prev, assistantMessage]);
-        setCurrentDepth(response.current_depth || 0.0);
+        setCurrentDepth(response.depth || 0.0);
 
         if (response.conversation) {
           setConversations(prev => 
@@ -248,7 +248,7 @@ export default function DashboardPage() {
           );
         }
       } else {
-        console.error("No response in API response:", response);
+        console.error("No content in API response:", response);
       }
     } catch (error) {
       console.error("Failed to send message:", error);
