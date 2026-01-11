@@ -14,12 +14,18 @@ export class AudioPlayer {
 
   async playAudio(audioData: ArrayBuffer): Promise<void> {
     if (!this.audioContext) {
+      console.error('❌ AudioPlayer: AudioContext not initialized');
       throw new Error('AudioContext not initialized');
     }
 
     try {
-      console.log('AudioPlayer: Received audio data, size:', audioData.byteLength, 'bytes');
-      console.log('AudioPlayer: AudioContext state:', this.audioContext.state);
+      console.log('🔊 AudioPlayer: Received audio data, size:', audioData.byteLength, 'bytes');
+      console.log('🔊 AudioPlayer: AudioContext state:', this.audioContext.state);
+      
+      if (audioData.byteLength === 0) {
+        console.error('❌ AudioPlayer: Received empty audio data, cannot play');
+        throw new Error('Empty audio data received');
+      }
       
       // Resume AudioContext if suspended (browser security feature)
       if (this.audioContext.state === 'suspended') {
@@ -31,9 +37,12 @@ export class AudioPlayer {
       if (!this.audioContext) {
         throw new Error('AudioContext not initialized');
       }
-      console.log('AudioPlayer: Decoding audio data...');
+      console.log('🔊 AudioPlayer: Decoding audio data...');
       const audioBuffer = await this.audioContext.decodeAudioData(audioData);
-      console.log('AudioPlayer: Audio decoded, duration:', audioBuffer.duration, 'seconds, channels:', audioBuffer.numberOfChannels);
+      console.log('🔊 AudioPlayer: ✅ Audio decoded successfully!');
+      console.log('🔊 AudioPlayer: Duration:', audioBuffer.duration, 'seconds');
+      console.log('🔊 AudioPlayer: Sample rate:', audioBuffer.sampleRate, 'Hz');
+      console.log('🔊 AudioPlayer: Channels:', audioBuffer.numberOfChannels);
       
       this.audioQueue.push(audioBuffer);
       
@@ -43,7 +52,12 @@ export class AudioPlayer {
         this.playNext();
       }
     } catch (error) {
-      console.error('Error decoding audio:', error);
+      console.error('❌ AudioPlayer: Error decoding audio:', error);
+      console.error('❌ AudioPlayer: Audio data details:', {
+        byteLength: audioData.byteLength,
+        firstBytes: new Uint8Array(audioData.slice(0, 16)),
+        likelyEmpty: audioData.byteLength === 0
+      });
       throw error;
     }
   }
@@ -67,16 +81,16 @@ export class AudioPlayer {
       this.sourceNode.buffer = audioBuffer;
       this.sourceNode.connect(this.audioContext.destination);
       
-      console.log('AudioPlayer: Starting audio source...');
+      console.log('🔊 AudioPlayer: Starting audio source...');
       
       return new Promise<void>((resolve, reject) => {
         this.sourceNode!.onended = () => {
-          console.log('AudioPlayer: Audio playback ended');
+          console.log('🔊 AudioPlayer: ✅ Audio playback ended successfully');
           this.playNext().then(resolve).catch(reject);
         };
         
         this.sourceNode!.start(0);
-        console.log('AudioPlayer: Audio source started');
+        console.log('🔊 AudioPlayer: ✅ Audio source started - you should hear sound now!');
       });
     } catch (error) {
       console.error('Error playing audio:', error);

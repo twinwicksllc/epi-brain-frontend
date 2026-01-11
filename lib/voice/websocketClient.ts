@@ -25,55 +25,74 @@ export class VoiceStreamClient {
   connect(): void {
     try {
       const wsUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace('http', 'ws')}/api/v1/voice/stream?token=${this.options.token}`;
+      console.log('🔊 Voice: Connecting WebSocket to:', wsUrl);
+      console.log('🔊 Voice: Token exists:', !!this.options.token);
       
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log('Voice WebSocket connected');
+        console.log('🔊 Voice: WebSocket connected successfully');
         this.reconnectAttempts = 0;
       };
 
       this.ws.onmessage = async (event) => {
+        console.log('🔊 Voice: Received WebSocket message, type:', typeof event.data);
+        
         try {
           // Check if message is binary (audio chunk) or text (JSON message)
           if (event.data instanceof ArrayBuffer) {
             // Binary audio chunk - pass directly to audio handler
-            console.log('Received binary audio chunk, size:', event.data.byteLength, 'bytes');
-            this.options.onAudio?.(event.data);
+            console.log('🔊 Voice: Received binary audio chunk, size:', event.data.byteLength, 'bytes');
+            
+            if (event.data.byteLength > 0) {
+              console.log('🔊 Voice: ✅ Audio data received, passing to audio handler');
+              this.options.onAudio?.(event.data);
+            } else {
+              console.log('❌ Voice: Received empty audio buffer');
+            }
           } else if (event.data instanceof Blob) {
             // Handle Blob (some browsers send as Blob)
-            console.log('Received audio Blob, size:', event.data.size, 'bytes');
+            console.log('🔊 Voice: Received audio Blob, size:', event.data.size, 'bytes');
             const arrayBuffer = await event.data.arrayBuffer();
-            console.log('Converted Blob to ArrayBuffer, size:', arrayBuffer.byteLength, 'bytes');
-            this.options.onAudio?.(arrayBuffer);
+            console.log('🔊 Voice: Converted Blob to ArrayBuffer, size:', arrayBuffer.byteLength, 'bytes');
+            
+            if (arrayBuffer.byteLength > 0) {
+              console.log('🔊 Voice: ✅ Audio data ready, passing to audio handler');
+              this.options.onAudio?.(arrayBuffer);
+            } else {
+              console.log('❌ Voice: Received empty audio buffer from Blob');
+            }
           } else {
             // Text message - parse as JSON
+            console.log('🔊 Voice: Received text message:', event.data);
             const data = JSON.parse(event.data);
             
             if (data.type === 'error') {
+              console.error('❌ Voice: Server error:', data.message || data.error);
               this.options.onError?.(new Error(data.message || data.error || 'Unknown error'));
             } else if (data.type === 'speak_start') {
-              console.log('Voice generation started:', data);
+              console.log('🔊 Voice: Voice generation started:', data);
             } else if (data.type === 'speak_complete') {
-              console.log('Voice generation complete');
+              console.log('🔊 Voice: Voice generation complete');
             } else if (data.type === 'connected') {
-              console.log('Voice stream connected:', data);
+              console.log('🔊 Voice: Voice stream connected:', data);
             } else {
-              console.log('Received text message:', data);
+              console.log('🔊 Voice: Received other text message:', data);
             }
           }
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+          console.error('❌ Voice: Error parsing WebSocket message:', error);
         }
       };
 
       this.ws.onerror = (error: any) => {
-        console.error('WebSocket error:', error);
+        console.error('❌ Voice: WebSocket error:', error);
+        console.error('❌ Voice: WebSocket state:', this.ws?.readyState);
         this.options.onError?.(new Error(error?.message || 'WebSocket error'));
       };
 
-      this.ws.onclose = () => {
-        console.log('Voice WebSocket closed');
+      this.ws.onclose = (event) => {
+        console.log('🔊 Voice: WebSocket closed, code:', event.code, 'reason:', event.reason);
         this.options.onClose?.();
         
         // Attempt reconnection
