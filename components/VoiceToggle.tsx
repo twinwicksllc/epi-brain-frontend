@@ -169,7 +169,7 @@ export default function VoiceToggle({
     <div className="relative">
       {/* Error tooltip */}
       {showError && (
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg z-50 max-w-sm">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-red-500 text-white text-xs px-4 py-2 rounded-lg shadow-lg z-[9999] max-w-md text-center">
           {errorMessage}
           <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-red-500 rotate-45"></div>
         </div>
