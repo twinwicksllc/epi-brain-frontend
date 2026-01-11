@@ -10,6 +10,8 @@ import ChatInput from "@/components/ChatInput";
 import MessageBubble from "@/components/MessageBubble";
 import VoiceToggle from "@/components/VoiceToggle";
 import { getDepthGradient } from "@/lib/utils/depthColors";
+import { VoiceManager, VoiceOptions } from "@/lib/voice/voiceManager";
+import { getVoiceForMode } from "@/lib/voice/types";
 
 interface Message {
   id: string;
@@ -54,6 +56,8 @@ export default function DashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [voiceGender, setVoiceGender] = useState<'male' | 'female'>('female');
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const voiceManagerRef = useRef<VoiceManager | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -63,6 +67,41 @@ export default function DashboardPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingMessage]);
+
+  // Initialize voice manager
+  useEffect(() => {
+    const initVoiceManager = () => {
+      if (typeof window !== 'undefined' && currentMode && voiceEnabled) {
+        const token = localStorage.getItem('token') || '';
+        const voiceModel = getVoiceForMode(currentMode.id, voiceGender);
+        
+        if (voiceModel) {
+          const options: VoiceOptions = {
+            token,
+            mode: currentMode.id,
+            voiceModel: voiceModel.id,
+            onError: (error) => {
+              console.error('Voice error:', error);
+            },
+            onAudioStart: () => {
+              console.log('Voice audio started');
+            },
+            onAudioEnd: () => {
+              console.log('Voice audio ended');
+            }
+          };
+
+          voiceManagerRef.current = new VoiceManager();
+          voiceManagerRef.current.enable(options);
+        }
+      } else if (!voiceEnabled && voiceManagerRef.current) {
+        voiceManagerRef.current.disable();
+        voiceManagerRef.current = null;
+      }
+    };
+
+    initVoiceManager();
+  }, [voiceEnabled, currentMode, voiceGender]);
 
   useEffect(() => {
     const initDashboard = async () => {
@@ -238,6 +277,14 @@ export default function DashboardPage() {
         setMessages(prev => [...prev, assistantMessage]);
         setCurrentDepth(response.depth || 0.0);
 
+        // Trigger voice if enabled
+        if (voiceEnabled && currentMode) {
+          const voiceModel = getVoiceForMode(currentMode.id, voiceGender);
+          if (voiceModel && voiceManagerRef.current) {
+            voiceManagerRef.current.speak(response.content, currentMode.id);
+          }
+        }
+
         if (response.conversation) {
           setConversations(prev => 
             prev.map(conv => 
@@ -316,6 +363,9 @@ export default function DashboardPage() {
                     if (typeof window !== 'undefined') {
                       localStorage.setItem('voiceGender', gender);
                     }
+                  }}
+                  onVoiceEnabled={(enabled) => {
+                    setVoiceEnabled(enabled);
                   }}
                 />
               )}
