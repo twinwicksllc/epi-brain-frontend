@@ -35,14 +35,23 @@ export class VoiceStreamClient {
 
       this.ws.onmessage = async (event) => {
         try {
-          const data = JSON.parse(event.data);
-          
-          if (data.type === 'audio') {
-            // Convert base64 to ArrayBuffer
-            const audioData = this.base64ToArrayBuffer(data.audio);
-            this.options.onAudio?.(audioData);
-          } else if (data.type === 'error') {
-            this.options.onError?.(new Error(data.error));
+          // Check if message is binary (audio chunk) or text (JSON message)
+          if (event.data instanceof ArrayBuffer) {
+            // Binary audio chunk - pass directly to audio handler
+            this.options.onAudio?.(event.data);
+          } else {
+            // Text message - parse as JSON
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'error') {
+              this.options.onError?.(new Error(data.message || data.error || 'Unknown error'));
+            } else if (data.type === 'speak_start') {
+              console.log('Voice generation started:', data);
+            } else if (data.type === 'speak_complete') {
+              console.log('Voice generation complete');
+            } else if (data.type === 'connected') {
+              console.log('Voice stream connected:', data);
+            }
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
