@@ -38,7 +38,14 @@ export class VoiceStreamClient {
           // Check if message is binary (audio chunk) or text (JSON message)
           if (event.data instanceof ArrayBuffer) {
             // Binary audio chunk - pass directly to audio handler
+            console.log('Received binary audio chunk, size:', event.data.byteLength, 'bytes');
             this.options.onAudio?.(event.data);
+          } else if (event.data instanceof Blob) {
+            // Handle Blob (some browsers send as Blob)
+            console.log('Received audio Blob, size:', event.data.size, 'bytes');
+            const arrayBuffer = await event.data.arrayBuffer();
+            console.log('Converted Blob to ArrayBuffer, size:', arrayBuffer.byteLength, 'bytes');
+            this.options.onAudio?.(arrayBuffer);
           } else {
             // Text message - parse as JSON
             const data = JSON.parse(event.data);
@@ -51,6 +58,8 @@ export class VoiceStreamClient {
               console.log('Voice generation complete');
             } else if (data.type === 'connected') {
               console.log('Voice stream connected:', data);
+            } else {
+              console.log('Received text message:', data);
             }
           }
         } catch (error) {

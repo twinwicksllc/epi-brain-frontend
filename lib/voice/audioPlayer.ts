@@ -18,15 +18,28 @@ export class AudioPlayer {
     }
 
     try {
+      console.log('AudioPlayer: Received audio data, size:', audioData.byteLength, 'bytes');
+      console.log('AudioPlayer: AudioContext state:', this.audioContext.state);
+      
+      // Resume AudioContext if suspended (browser security feature)
+      if (this.audioContext.state === 'suspended') {
+        console.log('AudioPlayer: Resuming suspended AudioContext');
+        await this.audioContext.resume();
+      }
+      
       // Decode audio data
       if (!this.audioContext) {
         throw new Error('AudioContext not initialized');
       }
+      console.log('AudioPlayer: Decoding audio data...');
       const audioBuffer = await this.audioContext.decodeAudioData(audioData);
+      console.log('AudioPlayer: Audio decoded, duration:', audioBuffer.duration, 'seconds, channels:', audioBuffer.numberOfChannels);
+      
       this.audioQueue.push(audioBuffer);
       
       // Start playing if not already playing
       if (!this.isPlaying) {
+        console.log('AudioPlayer: Starting playback...');
         this.playNext();
       }
     } catch (error) {
@@ -44,6 +57,7 @@ export class AudioPlayer {
     this.isPlaying = true;
     const audioBuffer = this.audioQueue.shift()!;
     this.currentBuffer = audioBuffer;
+    console.log('AudioPlayer: Playing next audio from queue, queue size:', this.audioQueue.length);
 
     try {
       if (!this.audioContext) {
@@ -53,9 +67,16 @@ export class AudioPlayer {
       this.sourceNode.buffer = audioBuffer;
       this.sourceNode.connect(this.audioContext.destination);
       
+      console.log('AudioPlayer: Starting audio source...');
+      
       return new Promise<void>((resolve, reject) => {
         this.sourceNode!.onended = () => {
+          console.log('AudioPlayer: Audio playback ended');
           this.playNext().then(resolve).catch(reject);
+        };
+        
+        this.sourceNode!.onplay = () => {
+          console.log('AudioPlayer: Audio is playing');
         };
         
         this.sourceNode!.start(0);
