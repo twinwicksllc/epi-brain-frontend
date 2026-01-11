@@ -39,6 +39,12 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      // Don't try to refresh for voice API (it has different auth issues)
+      if (originalRequest.url?.includes('/voice/')) {
+        console.log('Skipping refresh for voice API endpoint - using original error');
+        return Promise.reject(error);
+      }
+
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         const response = await axios.post(`${API_URL}/api/v1/auth/refresh`, {
@@ -51,7 +57,11 @@ apiClient.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${access_token}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
-        localStorage.clear();
+        console.log('Token refresh failed, clearing tokens and redirecting to login');
+        // Only clear auth tokens, not entire localStorage
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
