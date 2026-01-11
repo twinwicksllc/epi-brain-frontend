@@ -80,10 +80,10 @@ export class VoiceStreamClient {
     }
 
     this.ws.send(JSON.stringify({
-      type: 'tts',
+      type: 'speak',
       text,
-      mode,
-      voice_model: voiceModel
+      personality: mode,
+      gender: voiceModel.includes('-M') ? 'male' : 'female'
     }));
   }
 

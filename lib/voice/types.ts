@@ -26,40 +26,40 @@ export interface ModeVoiceMapping {
 
 export const DEFAULT_VOICE_MODELS: ModeVoiceMapping = {
   personal_friend: {
-    male: { id: 'aura-asteria-en', name: 'Asteria', gender: 'male', language: 'en', description: 'Friendly and casual' },
-    female: { id: 'aura-luna-en', name: 'Luna', gender: 'female', language: 'en', description: 'Warm and supportive' }
+    male: { id: 'aura-2-arcas-en', name: 'Arcas', gender: 'male', language: 'en', description: 'Natural, smooth, clear - comfortable conversation' },
+    female: { id: 'aura-2-helena-en', name: 'Helena', gender: 'female', language: 'en', description: 'Caring, natural, friendly - emotional support' }
   },
   sales_agent: {
-    male: { id: 'aura-orion-en', name: 'Orion', gender: 'male', language: 'en', description: 'Confident and professional' },
-    female: { id: 'aura-athena-en', name: 'Athena', gender: 'female', language: 'en', description: 'Persuasive and articulate' }
+    male: { id: 'aura-2-arcas-en', name: 'Arcas', gender: 'male', language: 'en', description: 'Natural, smooth, clear - professional sales' },
+    female: { id: 'aura-2-thalia-en', name: 'Thalia', gender: 'female', language: 'en', description: 'Clear, confident, energetic - ideal for sales' }
   },
   student_tutor: {
-    male: { id: 'aura-zeus-en', name: 'Zeus', gender: 'male', language: 'en', description: 'Clear and educational' },
-    female: { id: 'aura-hera-en', name: 'Hera', gender: 'female', language: 'en', description: 'Patient and encouraging' }
+    male: { id: 'aura-arcas-en', name: 'Arcas', gender: 'male', language: 'en', description: 'Clear and educational' },
+    female: { id: 'aura-2-helena-en', name: 'Helena', gender: 'female', language: 'en', description: 'Patient and encouraging' }
   },
   kids_learning: {
-    male: { id: 'aura-asteria-en', name: 'Asteria', gender: 'male', language: 'en', description: 'Fun and energetic' },
-    female: { id: 'aura-luna-en', name: 'Luna', gender: 'female', language: 'en', description: 'Playful and gentle' }
+    male: { id: 'aura-2-aries-en', name: 'Aries', gender: 'male', language: 'en', description: 'Warm, energetic, caring - engaging for children' },
+    female: { id: 'aura-2-thalia-en', name: 'Thalia', gender: 'female', language: 'en', description: 'Clear, confident, energetic - engaging for children' }
   },
   christian_companion: {
-    male: { id: 'aura-orion-en', name: 'Orion', gender: 'male', language: 'en', description: 'Warm and reverent' },
-    female: { id: 'aura-hera-en', name: 'Hera', gender: 'female', language: 'en', description: 'Compassionate and wise' }
+    male: { id: 'aura-2-aries-en', name: 'Aries', gender: 'male', language: 'en', description: 'Warm, energetic, caring - supportive guidance' },
+    female: { id: 'aura-2-helena-en', name: 'Helena', gender: 'female', language: 'en', description: 'Caring, natural - supportive spiritual guidance' }
   },
   customer_service: {
-    male: { id: 'aura-zeus-en', name: 'Zeus', gender: 'male', language: 'en', description: 'Professional and helpful' },
-    female: { id: 'aura-athena-en', name: 'Athena', gender: 'female', language: 'en', description: 'Polite and empathetic' }
+    male: { id: 'aura-2-arcas-en', name: 'Arcas', gender: 'male', language: 'en', description: 'Natural, smooth, clear - professional support' },
+    female: { id: 'aura-2-thalia-en', name: 'Thalia', gender: 'female', language: 'en', description: 'Clear, confident, energetic - efficient problem-solving' }
   },
   psychology_expert: {
-    male: { id: 'aura-apollo-en', name: 'Apollo', gender: 'male', language: 'en', description: 'Calm and analytical' },
-    female: { id: 'aura-thalia-en', name: 'Thalia', gender: 'female', language: 'en', description: 'Gentle and understanding' }
+    male: { id: 'aura-2-arcas-en', name: 'Arcas', gender: 'male', language: 'en', description: 'Natural, smooth - therapeutic presence' },
+    female: { id: 'aura-2-helena-en', name: 'Helena', gender: 'female', language: 'en', description: 'Caring, natural, friendly - therapeutic empathy' }
   },
   business_mentor: {
-    male: { id: 'aura-zeus-en', name: 'Zeus', gender: 'male', language: 'en', description: 'Authoritative and strategic' },
-    female: { id: 'aura-athena-en', name: 'Athena', gender: 'female', language: 'en', description: 'Professional and calm' }
+    male: { id: 'aura-2-zeus-en', name: 'Zeus', gender: 'male', language: 'en', description: 'Deep, trustworthy, smooth - authority and experience' },
+    female: { id: 'aura-2-athena-en', name: 'Athena', gender: 'female', language: 'en', description: 'Calm, smooth, professional - business authority' }
   },
   weight_loss_coach: {
-    male: { id: 'aura-orion-en', name: 'Orion', gender: 'male', language: 'en', description: 'Motivating and energetic' },
-    female: { id: 'aura-hera-en', name: 'Hera', gender: 'female', language: 'en', description: 'Encouraging and supportive' }
+    male: { id: 'aura-2-aries-en', name: 'Aries', gender: 'male', language: 'en', description: 'Warm, energetic, caring - motivational support' },
+    female: { id: 'aura-2-thalia-en', name: 'Thalia', gender: 'female', language: 'en', description: 'Clear, confident, energetic - motivational coaching' }
   }
 };
 
