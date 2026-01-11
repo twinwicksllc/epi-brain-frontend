@@ -12,6 +12,7 @@ interface VoiceToggleProps {
   gender: 'male' | 'female';
   onGenderChange?: (gender: 'male' | 'female') => void;
   onVoiceEnabled?: (enabled: boolean) => void;
+  onSpeakRequest?: () => void; // Callback when parent wants to trigger speech
 }
 
 export default function VoiceToggle({ 
@@ -79,16 +80,22 @@ export default function VoiceToggle({
 
     try {
       if (voiceEnabled) {
+        console.log('🔊 Enabling voice for mode:', mode);
+        
         // Check voice stats
+        console.log('🔊 Getting voice stats...');
         const stats = await voiceApi.getVoiceStats();
+        console.log('🔊 Voice stats response:', stats);
         setVoiceStats({
           remaining: stats.remaining,
           limit: stats.limit
         });
 
         if (stats.remaining !== undefined && stats.remaining <= 0) {
+          const errorMsg = 'Voice limit reached for today';
+          console.log('❌ Voice:', errorMsg);
           setShowError(true);
-          setErrorMessage('Voice limit reached for today');
+          setErrorMessage(errorMsg);
           setTimeout(() => setShowError(false), 3000);
           setIsLoading(false);
           return;
@@ -123,11 +130,28 @@ export default function VoiceToggle({
 
       setIsEnabled(voiceEnabled);
       onVoiceEnabled?.(voiceEnabled);
-    } catch (error) {
-      console.error('Failed to toggle voice:', error);
+    } catch (error: any) {
+      console.error('❌ Voice: Failed to toggle voice:', error);
+      console.error('❌ Voice: Error response:', error.response);
+      
+      let errorMsg = 'Failed to enable voice';
+      
+      if (error.response?.status === 404) {
+        errorMsg = 'Voice feature not available - updating backend...';
+        console.log('❌ Voice: API endpoint not found - backend may be deploying');
+      } else if (error.response?.status === 401) {
+        errorMsg = 'Authentication expired - please login again';
+      } else if (error.response?.data?.detail) {
+        errorMsg = error.response.data.detail;
+      } else if (error.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
       setShowError(true);
-      setErrorMessage('Failed to enable voice');
-      setTimeout(() => setShowError(false), 3000);
+      setErrorMessage(errorMsg);
+      setTimeout(() => setShowError(false), 5000);
     } finally {
       setIsLoading(false);
     }
@@ -145,7 +169,7 @@ export default function VoiceToggle({
     <div className="relative">
       {/* Error tooltip */}
       {showError && (
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap z-50 max-w-xs">
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg z-50 max-w-sm">
           {errorMessage}
           <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-red-500 rotate-45"></div>
         </div>

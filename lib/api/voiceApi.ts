@@ -20,8 +20,15 @@ export interface AvailableVoices {
 
 class VoiceApi {
   async getVoiceStats(): Promise<VoiceStats> {
-    const response = await apiClient.get('/voice/stats');
-    return response.data;
+    console.log('🔊 Voice API: Getting voice stats...');
+    try {
+      const response = await apiClient.get('/voice/stats');
+      console.log('🔊 Voice API: Stats response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Voice API: Error getting stats:', error);
+      throw error;
+    }
   }
 
   async getAvailableVoices(): Promise<AvailableVoices> {
