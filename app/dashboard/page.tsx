@@ -128,11 +128,16 @@ export default function Dashboard() {
       console.error("Voice stats error details:", error.response?.data || error.message);
       
       // Set default stats if API fails
+      const userTier = user?.tier || "free";
+      const isUnlimited = userTier === "pro" || userTier === "enterprise";
+      
       setVoiceStats({
-        tier: user?.tier || "free",
+        tier: userTier,
         daily_usage: 0,
-        daily_limit: user?.tier === "pro" || user?.tier === "enterprise" ? null : 10,
-        remaining: user?.tier === "pro" || user?.tier === "enterprise" ? null : 10,
+        daily_limit: isUnlimited ? 999999 : 10,
+        remaining: isUnlimited ? "unlimited" : 10,
+        total_usage: 0,
+        voice_model: "eleven_multilingual_v2",
       });
     }
   };

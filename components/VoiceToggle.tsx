@@ -24,14 +24,15 @@ export default function VoiceToggle({
       return "Loading...";
     }
     
-    const { tier, daily_usage, daily_limit } = voiceStats;
+    const { tier, daily_usage, remaining } = voiceStats;
     
-    if (tier === "pro" || tier === "enterprise") {
+    // If remaining is "unlimited", show that
+    if (remaining === "unlimited" || remaining === null) {
       return `${daily_usage}/unlimited`;
     }
     
-    // For free tier, show "X/10"
-    const limit = daily_limit || 10;
+    // Otherwise show "X/limit"
+    const limit = voiceStats.daily_limit || 10;
     return `${daily_usage}/${limit}`;
   };
 
