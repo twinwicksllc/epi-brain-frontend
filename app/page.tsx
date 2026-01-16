@@ -6,6 +6,8 @@ import { MessageSquare, Briefcase, BookOpen, Palette, Cross, Headphones, Brain, 
 
 // Force cache invalidation - deployed 2025-01-12
 
+// Force cache invalidation - deployed 2025-01-12
+
 const modes = [
   {
     id: 'personal_friend',
@@ -93,13 +95,7 @@ export default function Home() {
       
       <div className="relative z-10">
         {/* Header */}
-        <header className="container mx-auto px-6 py-8 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#7B3FF2] to-[#A78BFA] rounded-full flex items-center justify-center">
-              <Brain className="text-white" size={24} />
-            </div>
-            <h1 className="text-2xl font-bold text-white">EPI Brain</h1>
-          </div>
+        <header className="container mx-auto px-6 py-8 flex justify-end items-center">
           <button
             onClick={handleSignIn}
             className="px-6 py-2 bg-transparent border border-[#7B3FF2] text-white rounded-lg hover:bg-[#7B3FF2] transition-colors"
@@ -110,6 +106,13 @@ export default function Home() {
 
         {/* Hero Section */}
         <section className="container mx-auto px-6 py-20 text-center">
+          <div className="mb-8">
+            <img
+              src="/assets/brain-logo-landing.png"
+              alt="EPI Brain Logo"
+              className="mx-auto w-48 h-48 object-contain"
+            />
+          </div>
           <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
             Your AI-Powered
             <span className="block bg-gradient-to-r from-[#7B3FF2] to-[#A78BFA] bg-clip-text text-transparent">
