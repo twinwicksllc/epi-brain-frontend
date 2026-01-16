@@ -110,9 +110,12 @@ export default function Home() {
             <img
               src="/assets/brain-logo-landing.png"
               alt="EPI Brain Logo"
-              className="mx-auto w-48 h-48 object-contain"
+              className="mx-auto w-[230px] h-[230px] object-contain"
             />
           </div>
+          <h1 className="text-6xl md:text-7xl font-bold text-white mb-4">
+            EPI Brain
+          </h1>
           <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
             Your AI-Powered
             <span className="block bg-gradient-to-r from-[#7B3FF2] to-[#A78BFA] bg-clip-text text-transparent">

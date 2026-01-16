@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '@/lib/api/client';
-import { Brain } from 'lucide-react';
 
 export default function Login() {
   const router = useRouter();
@@ -61,9 +60,11 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-[#1a0a2e] to-[#2d1b4e] flex items-center justify-center px-6">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#7B3FF2] to-[#A78BFA] rounded-full flex items-center justify-center mx-auto mb-4">
-            <Brain className="text-white" size={32} />
-          </div>
+          <img
+            src="/assets/brain-logo-landing.png"
+            alt="EPI Brain Logo"
+            className="mx-auto w-24 h-24 object-contain mb-4"
+          />
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
           <p className="text-gray-400">Sign in to continue your journey</p>
         </div>
