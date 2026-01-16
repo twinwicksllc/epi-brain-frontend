@@ -210,7 +210,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="container mx-auto px-6 py-8 border-t border-[#7B3FF2]/20">
           <div className="text-center text-gray-400">
-            <p>&copy; 2024 EPI Brain. Built with ❤️ by TwinWicks LLC</p>
+            <p>&copy; 2025 EPI Brain. Built with ❤️ by TwinWicks LLC</p>
           </div>
         </footer>
       </div>
