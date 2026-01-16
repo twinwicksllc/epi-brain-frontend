@@ -105,8 +105,8 @@ export default function Home() {
         </header>
 
         {/* Hero Section */}
-        <section className="container mx-auto px-6 py-20 text-center">
-          <div className="mb-8">
+        <section className="container mx-auto px-6 py-8 text-center">
+          <div className="mb-6">
             <img
               src="/assets/brain-logo-landing.png"
               alt="EPI Brain Logo"

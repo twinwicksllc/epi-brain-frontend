@@ -159,6 +159,10 @@ export default function Dashboard() {
 
     try {
       console.log("Sending message:", { mode: currentMode, message: content, conversationId: currentConversationId });
+      
+      // Add a minimum 1-second delay to ensure animation is visible
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       const response = await chatApi.sendMessage(currentMode, content, currentConversationId || undefined);
       
       console.log("Received response:", response);
