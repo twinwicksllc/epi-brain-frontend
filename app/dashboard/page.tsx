@@ -100,13 +100,14 @@ export default function Dashboard() {
       const response = await chatApi.getConversations();
       console.log("Conversations response:", response);
       
-      if (response.data && Array.isArray(response.data.conversations)) {
-        console.log("Found conversations:", response.data.conversations.length);
-        setConversations(response.data.conversations);
+      // The API returns the conversations array directly in response.data
+      if (response.data && Array.isArray(response.data)) {
+        console.log("Found conversations:", response.data.length);
+        setConversations(response.data);
         
         // Load the most recent conversation if available
-        if (response.data.conversations.length > 0) {
-          const latest = response.data.conversations[0];
+        if (response.data.length > 0) {
+          const latest = response.data[0];
           console.log("Loading latest conversation:", latest.id);
           setCurrentConversationId(latest.id);
         }
