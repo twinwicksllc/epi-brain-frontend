@@ -30,6 +30,7 @@ export default function Dashboard() {
   const voiceManagerRef = useRef<VoiceManager | null>(null);
   const [isVoiceAvailable, setIsVoiceAvailable] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [isAiThinking, setIsAiThinking] = useState(false);
 
   // Calculate background gradient based on depth
   const getDepthGradient = (depth: number) => {
@@ -154,6 +155,7 @@ export default function Dashboard() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    setIsAiThinking(true); // Start brain animation
 
     try {
       console.log("Sending message:", { mode: currentMode, message: content, conversationId: currentConversationId });
@@ -170,6 +172,7 @@ export default function Dashboard() {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+      setIsAiThinking(false); // Stop brain animation
 
       // Update conversation ID if this is a new conversation
       if (response.conversation_id && response.conversation_id !== currentConversationId) {
@@ -234,6 +237,7 @@ export default function Dashboard() {
         depth: currentDepth,
       };
       setMessages((prev) => [...prev, errorMessage]);
+      setIsAiThinking(false); // Stop brain animation on error
     }
   };
 
@@ -317,6 +321,7 @@ export default function Dashboard() {
         onDeleteConversation={handleDeleteConversation}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        isLoading={isAiThinking}
       />
 
       {/* Main Content */}
