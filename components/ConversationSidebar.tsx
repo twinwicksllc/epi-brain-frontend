@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Conversation } from "@/types";
+import BrainLogo from "./BrainLogo";
 
 interface ConversationSidebarProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface ConversationSidebarProps {
   onSelectConversation: (id: string) => void;
   onNewConversation: () => void;
   onDeleteConversation: (id: string) => void;
+  isLoading?: boolean;
 }
 
 export default function ConversationSidebar({
@@ -22,6 +24,7 @@ export default function ConversationSidebar({
   onSelectConversation,
   onNewConversation,
   onDeleteConversation,
+  isLoading = false,
 }: ConversationSidebarProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -39,6 +42,11 @@ export default function ConversationSidebar({
       <div className={`w-64 bg-[#2d1b4e] border-r border-[#7B3FF2]/30 flex flex-col transition-transform duration-300 lg:translate-x-0 ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       } fixed lg:relative h-full z-50 lg:z-auto`}>
+
+        {/* Brain Logo Section */}
+        <div className="border-b border-[#7B3FF2]/20">
+          <BrainLogo isLoading={isLoading} />
+        </div>
 
         {/* Header */}
         <div className="p-4 border-b border-[#7B3FF2]/20">
