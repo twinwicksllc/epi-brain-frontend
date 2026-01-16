@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [isVoiceAvailable, setIsVoiceAvailable] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [isAiThinking, setIsAiThinking] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Calculate background gradient based on depth
   const getDepthGradient = (depth: number) => {
@@ -88,17 +89,29 @@ export default function Dashboard() {
     }
   }, [currentMode]);
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const loadConversations = async () => {
     try {
+      console.log("Loading conversations...");
       const response = await chatApi.getConversations();
+      console.log("Conversations response:", response);
+      
       if (response.data && Array.isArray(response.data.conversations)) {
+        console.log("Found conversations:", response.data.conversations.length);
         setConversations(response.data.conversations);
         
         // Load the most recent conversation if available
         if (response.data.conversations.length > 0) {
           const latest = response.data.conversations[0];
+          console.log("Loading latest conversation:", latest.id);
           setCurrentConversationId(latest.id);
         }
+      } else {
+        console.log("No conversations found or invalid response structure");
       }
     } catch (error) {
       console.error("Error loading conversations:", error);
@@ -362,6 +375,7 @@ export default function Dashboard() {
                 />
               ))
             )}
+            <div ref={messagesEndRef} />
           </div>
         </div>
 
