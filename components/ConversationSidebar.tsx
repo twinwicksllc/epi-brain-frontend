@@ -27,6 +27,29 @@ export default function ConversationSidebar({
   isLoading = false,
 }: ConversationSidebarProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [modeFilter, setModeFilter] = useState<string>('all');
+  
+  // Helper to format mode name for display
+  const formatModeName = (mode: string) => {
+    const modeMap: { [key: string]: string } = {
+      'personal_friend': 'Personal Companion',
+      'weight_loss_coach': 'Weight Loss Coach',
+      'productivity_coach': 'Productivity Coach',
+      'mental_health_coach': 'Mental Health Coach',
+      'fitness_coach': 'Fitness Coach',
+      'relationship_coach': 'Relationship Coach',
+      'career_coach': 'Career Coach',
+    };
+    return modeMap[mode] || mode.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+  
+  // Filter conversations by mode
+  const filteredConversations = modeFilter === 'all' 
+    ? conversations 
+    : conversations.filter(conv => conv.mode === modeFilter);
+  
+  // Get unique modes from conversations
+  const availableModes = Array.from(new Set(conversations.map(conv => conv.mode)));
 
   return (
     <>
@@ -70,18 +93,38 @@ export default function ConversationSidebar({
             </svg>
             New Chat
           </button>
+          
+          {/* Mode Filter */}
+          {availableModes.length > 1 && (
+            <div className="mt-3">
+              <select
+                value={modeFilter}
+                onChange={(e) => setModeFilter(e.target.value)}
+                className="w-full px-3 py-2 bg-[#1a0f2e] border border-[#7B3FF2]/30 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#7B3FF2]"
+              >
+                <option value="all">All Modes</option>
+                {availableModes.map((mode) => (
+                  <option key={mode} value={mode}>
+                    {formatModeName(mode)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto p-2">
-          {conversations.length === 0 ? (
+          {filteredConversations.length === 0 ? (
             <div className="text-center text-white/60 py-8">
-              <p>No conversations yet</p>
-              <p className="text-sm mt-2">Start a new chat to begin!</p>
+              <p>No conversations found</p>
+              <p className="text-sm mt-2">
+                {modeFilter !== 'all' ? `Try changing the mode filter` : 'Start a new chat to begin!'}
+              </p>
             </div>
           ) : (
             <div className="space-y-1">
-              {conversations.map((conversation) => (
+              {filteredConversations.map((conversation) => (
                 <div
                   key={conversation.id}
                   className={`group relative rounded-lg transition-all duration-200 ${
@@ -100,10 +143,10 @@ export default function ConversationSidebar({
                           {conversation.title}
                         </h3>
                         <p className="text-xs opacity-60 mt-1">
-                          {conversation.message_count} messages
+                          {formatModeName(conversation.mode)}
                         </p>
-                        <p className="text-xs opacity-40 mt-1">
-                          {formatDistanceToNow(new Date(conversation.updated_at), {
+                        <p className="text-xs opacity-50 mt-1">
+                          {conversation.message_count} messages • {formatDistanceToNow(new Date(conversation.updated_at), {
                             addSuffix: true,
                           })}
                         </p>
