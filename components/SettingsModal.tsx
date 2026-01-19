@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, Brain, Shield, Volume2, User as UserIcon, Save, Loader2 } from 'lucide-react'
+import { userApi } from '@/lib/api/client'
 
 const MODE_NAMES: { [key: string]: string } = {
   personal_friend: 'Personal Friend',
@@ -43,14 +44,8 @@ export default function SettingsModal({ isOpen, onClose }: { isOpen: boolean; on
   useEffect(() => {
     if (isOpen) {
       setIsLoading(true)
-      const token = localStorage.getItem('access_token')
       
-      fetch('/api/users/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-        .then(res => res.json())
+      userApi.getProfile()
         .then(data => {
           if (data.accountability_style) {
             setPreferences(prev => ({
@@ -72,43 +67,28 @@ export default function SettingsModal({ isOpen, onClose }: { isOpen: boolean; on
   }, [isOpen])
 
   const handleSave = async () => {
-    const token = localStorage.getItem('access_token')
-    if (!token) return
-
     setIsSaving(true)
     setSaveMessage('')
 
     try {
-      const response = await fetch('/api/users/me', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          accountability_style: preferences.accountability_style,
-          sentiment_override_enabled: preferences.sentiment_override_enabled,
-          depth_sensitivity_enabled: preferences.depth_sensitivity_enabled,
-          voice_preference: preferences.voice_preference,
-          primary_mode: preferences.primary_mode
-        })
+      const updatedUser = await userApi.updateProfile({
+        accountability_style: preferences.accountability_style,
+        sentiment_override_enabled: preferences.sentiment_override_enabled,
+        depth_sensitivity_enabled: preferences.depth_sensitivity_enabled,
+        voice_preference: preferences.voice_preference,
+        primary_mode: preferences.primary_mode
       })
-
-      if (response.ok) {
-        const updatedUser = await response.json()
-        localStorage.setItem('user_data', JSON.stringify(updatedUser))
-        
-        setSaveMessage('Settings saved successfully!')
-        setTimeout(() => {
-          setSaveMessage('')
-          onClose()
-        }, 1500)
-      } else {
-        setSaveMessage('Failed to save settings. Please try again.')
-      }
+      
+      localStorage.setItem('user_data', JSON.stringify(updatedUser))
+      
+      setSaveMessage('Settings saved successfully!')
+      setTimeout(() => {
+        setSaveMessage('')
+        onClose()
+      }, 1500)
     } catch (error) {
       console.error('Failed to save preferences:', error)
-      setSaveMessage('An error occurred. Please try again.')
+      setSaveMessage('Failed to save settings. Please try again.')
     } finally {
       setIsSaving(false)
     }
