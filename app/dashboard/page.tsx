@@ -121,11 +121,18 @@ export default function Dashboard() {
 
   const loadConversation = async (conversationId: string) => {
     try {
+      console.log('Loading conversation:', conversationId);
       const response = await chatApi.getConversation(conversationId);
-      if (response.data) {
-        setMessages(response.data.messages || []);
-        if (response.data.depth) {
-          setCurrentDepth(response.data.depth);
+      console.log('Conversation response:', response);
+      
+      if (response) {
+        setMessages(response.messages || []);
+        if (response.depth) {
+          setCurrentDepth(response.depth);
+        }
+        // Set the mode from the conversation
+        if (response.mode) {
+          setCurrentMode(response.mode);
         }
       }
     } catch (error) {
