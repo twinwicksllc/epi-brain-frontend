@@ -230,7 +230,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="container mx-auto px-6 py-8 border-t border-[#7B3FF2]/20">
           <div className="text-center text-gray-400">
-            <p>&amp;copy; 2025 EPI Brain. Built with &amp;#10084;&amp;#65039; by <a href="https://twin-wicks.com" target="_blank" rel="noopener noreferrer" className="text-[#7B3FF2] hover:text-[#A78BFA] transition-colors underline">Twin Wicks Digital Solutions</a></p>
+            <p>© 2025 EPI Brain. Built with ❤️ by <a href="https://twin-wicks.com" target="_blank" rel="noopener noreferrer" className="text-[#7B3FF2] hover:text-[#A78BFA] transition-colors underline">Twin Wicks Digital Solutions</a></p>
           </div>
         </footer>
       </main>
