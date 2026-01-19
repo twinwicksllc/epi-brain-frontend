@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, LogOut, User } from "lucide-react";
+import { Menu, X, LogOut, User, Settings } from "lucide-react";
 import ModeSelector from "./ModeSelector";
 import VoiceToggle from "./VoiceToggle";
+import SettingsModal from "./SettingsModal";
 
 interface HeaderProps {
   user: any;
@@ -32,6 +33,7 @@ export default function Header({
   isVoiceAvailable,
 }: HeaderProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -50,17 +52,18 @@ export default function Header({
   };
 
   return (
-    <header className="bg-[#2d1b4e]/80 backdrop-blur-md border-b border-[#7B3FF2]/30 sticky top-0 z-30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Left side - Menu button + Mode selector */}
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={onMenuClick}
-              className="md:hidden p-2 rounded-lg hover:bg-[#7B3FF2]/20 transition-colors"
-            >
-              <Menu className="w-6 h-6 text-white" />
-            </button>
+    <>
+      <header className="bg-[#2d1b4e]/80 backdrop-blur-md border-b border-[#7B3FF2]/30 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left side - Menu button + Mode selector */}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={onMenuClick}
+                className="md:hidden p-2 rounded-lg hover:bg-[#7B3FF2]/20 transition-colors"
+              >
+                <Menu className="w-6 h-6 text-white" />
+              </button>
 
             <Link href="/" className="hidden md:block">
               <h1 className="text-xl font-bold text-white">EPI Brain</h1>
@@ -133,6 +136,16 @@ export default function Header({
                   
                   <div className="px-4 py-2">
                     <button
+                      onClick={() => {
+                        setShowUserMenu(false)
+                        setShowSettingsModal(true)
+                      }}
+                      className="flex items-center w-full px-3 py-2 text-sm text-white hover:bg-[#7B3FF2]/20 rounded-lg transition-colors"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </button>
+                    <button
                       onClick={handleLogout}
                       className="flex items-center w-full px-3 py-2 text-sm text-white hover:bg-[#7B3FF2]/20 rounded-lg transition-colors"
                     >
@@ -147,5 +160,12 @@ export default function Header({
         </div>
       </div>
     </header>
+
+    {/* Settings Modal */}
+    <SettingsModal
+      isOpen={showSettingsModal}
+      onClose={() => setShowSettingsModal(false)}
+    />
+    </>
   );
 }
