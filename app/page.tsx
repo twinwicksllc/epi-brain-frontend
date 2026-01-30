@@ -3,9 +3,6 @@
 import { useRouter } from 'next/navigation';
 import NeuronParticles from '@/components/NeuronParticles';
 import { MessageSquare, Briefcase, BookOpen, Palette, Cross, Headphones, Brain, TrendingUp, Dumbbell } from 'lucide-react';
-import FAQSection from '@/components/FAQSection';
-import HowItWorks from '@/components/HowItWorks';
-import WhyChooseEPI from '@/components/WhyChooseEPI';
 
 // Force cache invalidation - deployed 2025-01-12
 
@@ -169,45 +166,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* How It Works Section */}
-        <HowItWorks />
-
-        {/* Why Choose EPI Brain Section */}
-        <WhyChooseEPI />
-
-        {/* Features Section */}
-        <section className="container mx-auto px-6 py-20" aria-labelledby="features-heading">
-          <h2 id="features-heading" className="text-4xl font-bold text-white text-center mb-16">
-            Core Features
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#7B3FF2]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="text-[#7B3FF2]" size={32} />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Real-time Conversations</h3>
-              <p className="text-gray-400">Experience natural, flowing conversations with instant AI responses</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#7B3FF2]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Brain className="text-[#7B3FF2]" size={32} />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">9 Unique Personalities</h3>
-              <p className="text-gray-400">Switch between specialized AI modes tailored to your needs</p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#7B3FF2]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="text-[#7B3FF2]" size={32} />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Track Your Progress</h3>
-              <p className="text-gray-400">Monitor your growth and achievements across all interactions</p>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ Section */}
-        <FAQSection />
-
         {/* CTA Section */}
         <section className="container mx-auto px-6 py-20 text-center" aria-labelledby="cta-heading">
           <div className="bg-gradient-to-r from-[#7B3FF2]/20 to-[#A78BFA]/20 border border-[#7B3FF2]/30 rounded-2xl p-12 max-w-4xl mx-auto">
@@ -229,8 +187,13 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="container mx-auto px-6 py-8 border-t border-[#7B3FF2]/20">
-          <div className="text-center text-gray-400">
-            <p>© 2025 EPI Brain. Built with ❤️ by <a href="https://twin-wicks.com" target="_blank" rel="noopener noreferrer" className="text-[#7B3FF2] hover:text-[#A78BFA] transition-colors underline">Twin Wicks Digital Solutions</a></p>
+          <div className="flex flex-col items-center space-y-4">
+            <nav className="flex gap-6" aria-label="Footer navigation">
+              <a href="/use-cases" className="text-gray-400 hover:text-[#7B3FF2] transition-colors">Use Cases</a>
+            </nav>
+            <p className="text-gray-400 text-center">
+              © 2025 EPI Brain. Built with ❤️ by <a href="https://twin-wicks.com" target="_blank" rel="noopener noreferrer" className="text-[#7B3FF2] hover:text-[#A78BFA] transition-colors underline">Twin Wicks Digital Solutions</a>
+            </p>
           </div>
         </footer>
       </main>
