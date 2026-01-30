@@ -274,7 +274,7 @@ export default function ConsolePage() {
                   )}
 
                   {/* Content */}
-                  <div className="relative h-full flex flex-col justify-end p-6">
+                  <div className="relative h-full flex flex-col justify-end items-center text-center p-6">
                     <h3 className="text-xl font-semibold text-white mb-2">
                       {personality.name}
                     </h3>
@@ -285,7 +285,7 @@ export default function ConsolePage() {
                     </p>
 
                     {isUnlocked && (
-                      <div className="mt-4 flex items-center gap-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="mt-4 flex items-center justify-center gap-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <span className="bg-gradient-to-r from-[#7B3FF2] to-[#3B82F6] bg-clip-text text-transparent">Click to start</span>
                         <span className="text-[#7B3FF2]">→</span>
                       </div>

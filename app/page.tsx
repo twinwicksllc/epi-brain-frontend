@@ -207,7 +207,7 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1a102e] via-[#1a102e]/60 to-transparent" />
 
                 {/* Content */}
-                <div className="relative h-full flex flex-col justify-end p-6">
+                <div className="relative h-full flex flex-col justify-end items-center text-center p-6">
                   <h3 className="text-2xl font-semibold text-white mb-2">
                     {mode.name}
                   </h3>
