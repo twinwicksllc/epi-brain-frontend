@@ -135,8 +135,15 @@ export default function Home() {
       
       <main className="relative z-10">
         {/* Header */}
-        <header className="container mx-auto px-6 py-8 flex justify-end items-center">
-          <nav aria-label="Main navigation">
+        <header className="container mx-auto px-6 py-6 flex justify-end items-center">
+          <nav aria-label="Main navigation" className="flex items-center gap-3">
+            <a
+              href="/use-cases"
+              className="px-6 py-2 bg-transparent border border-[#7B3FF2] text-white rounded-lg hover:bg-[#7B3FF2] transition-colors"
+              aria-label="View EPI Brain use cases"
+            >
+              Use Cases
+            </a>
             <button
               onClick={handleSignIn}
               className="px-6 py-2 bg-transparent border border-[#7B3FF2] text-white rounded-lg hover:bg-[#7B3FF2] transition-colors"
@@ -148,7 +155,7 @@ export default function Home() {
         </header>
 
         {/* Hero Section */}
-        <section className="container mx-auto px-6 py-8 text-center" aria-labelledby="hero-heading">
+        <section className="container mx-auto px-6 py-6 text-center" aria-labelledby="hero-heading">
           <div className="mb-6">
             <img
               src="/assets/brain-logo-landing.png"
@@ -167,7 +174,7 @@ export default function Home() {
               Life Companion
             </span>
           </h2>
-          <div className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed h-16 flex items-center justify-center">
+          <div className="text-xl text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed h-16 flex items-center justify-center">
             <p className="min-h-[2em]">
               {displayedText}
               <span className="inline-block w-0.5 h-6 bg-[#7B3FF2] ml-1 animate-pulse"></span>
@@ -183,7 +190,7 @@ export default function Home() {
         </section>
 
         {/* Modes Grid */}
-        <section className="container mx-auto px-6 py-20" aria-labelledby="modes-heading">
+        <section className="container mx-auto px-6 py-12" aria-labelledby="modes-heading">
           <h2 id="modes-heading" className="text-3xl font-bold text-white text-center mb-12">
             Choose Your AI Personality
           </h2>
@@ -211,7 +218,7 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="container mx-auto px-6 py-20 text-center" aria-labelledby="cta-heading">
+        <section className="container mx-auto px-6 py-12 text-center" aria-labelledby="cta-heading">
           <div className="bg-gradient-to-r from-[#7B3FF2]/20 to-[#A78BFA]/20 border border-[#7B3FF2]/30 rounded-2xl p-12 max-w-4xl mx-auto">
             <h2 id="cta-heading" className="text-4xl font-bold text-white mb-4">
               Ready to Transform Your Life?
@@ -230,12 +237,9 @@ export default function Home() {
         </section>
 
         {/* Footer */}
-        <footer className="container mx-auto px-6 py-8 border-t border-[#7B3FF2]/20">
-          <div className="flex flex-col items-center space-y-4">
-            <nav className="flex gap-6" aria-label="Footer navigation">
-              <a href="/use-cases" className="text-gray-400 hover:text-[#7B3FF2] transition-colors">Use Cases</a>
-            </nav>
-            <p className="text-gray-400 text-center">
+        <footer className="container mx-auto px-6 py-5 border-t border-[#7B3FF2]/20">
+          <div className="text-gray-400 text-center">
+            <p>
               © 2025 EPI Brain. Built with ❤️ by <a href="https://twin-wicks.com" target="_blank" rel="noopener noreferrer" className="text-[#7B3FF2] hover:text-[#A78BFA] transition-colors underline">Twin Wicks Digital Solutions</a>
             </p>
           </div>
