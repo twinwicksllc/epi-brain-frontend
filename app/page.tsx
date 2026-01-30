@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import NeuronParticles from '@/components/NeuronParticles';
-import { MessageSquare, Briefcase, BookOpen, Palette, Cross, Headphones, Brain, TrendingUp, Dumbbell } from 'lucide-react';
+import Image from 'next/image';
 
 // Force cache invalidation - deployed 2025-01-12
 
@@ -11,65 +11,56 @@ const modes = [
   {
     id: 'personal_friend',
     name: 'Personal Friend',
-    icon: MessageSquare,
+    image: '/personalities/personal_companion.jpeg',
     description: 'Your 24/7 companion for emotional support and daily check-ins',
-    color: 'from-purple-500 to-pink-500',
   },
   {
     id: 'sales_agent',
     name: 'Sales Agent',
-    icon: Briefcase,
+    image: '/personalities/sales_trainer.jpeg',
     description: 'Master NEBP methodology and practice sales scenarios',
-    color: 'from-blue-500 to-cyan-500',
   },
   {
     id: 'student_tutor',
     name: 'Student/Tutor',
-    icon: BookOpen,
+    image: '/personalities/student_tutor.jpeg',
     description: 'Personalized learning with performance tracking and grading',
-    color: 'from-green-500 to-emerald-500',
   },
   {
     id: 'kids_learning',
     name: 'Kids Learning',
-    icon: Palette,
+    image: '/personalities/kids_companion.jpeg',
     description: 'Fun, interactive learning for young minds',
-    color: 'from-yellow-500 to-orange-500',
   },
   {
     id: 'christian_companion',
     name: 'Christian Companion',
-    icon: Cross,
+    image: '/personalities/christian_companion1.jpeg',
     description: 'Prayer support, Bible study, and spiritual guidance',
-    color: 'from-indigo-500 to-purple-500',
   },
   {
     id: 'customer_service',
     name: 'Customer Service',
-    icon: Headphones,
+    image: '/personalities/customer_service.jpeg',
     description: 'Practice difficult scenarios and de-escalation techniques',
-    color: 'from-red-500 to-pink-500',
   },
   {
     id: 'psychology_expert',
     name: 'Psychology Expert',
-    icon: Brain,
+    image: '/personalities/psychology_expert.jpeg',
     description: 'Emotional intelligence and stress management support',
-    color: 'from-purple-500 to-blue-500',
   },
   {
     id: 'business_mentor',
     name: 'Business Mentor',
-    icon: TrendingUp,
+    image: '/personalities/business_mentor.jpeg',
     description: 'Strategic guidance for business growth and success',
-    color: 'from-cyan-500 to-blue-500',
   },
   {
     id: 'weight_loss_coach',
     name: 'Weight Loss Coach',
-    icon: Dumbbell,
+    image: '/personalities/weight_coach.jpeg',
     description: 'Personalized fitness and nutrition guidance',
-    color: 'from-green-500 to-teal-500',
   },
 ];
 
@@ -195,25 +186,42 @@ export default function Home() {
             Choose Your AI Personality
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            {modes.map((mode) => {
-              const Icon = mode.icon;
-              return (
-                <article
-                  key={mode.id}
-                  className="bg-[#2d1b4e] border border-[#7B3FF2]/20 rounded-xl p-6 hover:border-[#7B3FF2] transition-all hover:shadow-lg hover:shadow-[#7B3FF2]/20 cursor-pointer group"
-                >
-                  <div className={`w-14 h-14 bg-gradient-to-br ${mode.color} rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                    <Icon className="text-white" size={28} />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
+            {modes.map((mode) => (
+              <article
+                key={mode.id}
+                className="relative overflow-hidden rounded-xl border border-[#7B3FF2]/20 hover:border-[#7B3FF2] transition-all hover:shadow-lg hover:shadow-[#7B3FF2]/30 cursor-pointer group aspect-[3/4]"
+              >
+                {/* Background Image */}
+                <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105">
+                  <Image
+                    src={mode.image}
+                    alt={`${mode.name} AI Personality`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority
+                  />
+                </div>
+
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1a102e] via-[#1a102e]/60 to-transparent" />
+
+                {/* Content */}
+                <div className="relative h-full flex flex-col justify-end p-6">
+                  <h3 className="text-2xl font-semibold text-white mb-2">
                     {mode.name}
                   </h3>
-                  <p className="text-gray-400">
+                  <p className="text-gray-300 text-sm">
                     {mode.description}
                   </p>
-                </article>
-              );
-            })}
+                </div>
+
+                {/* Hover Glow Effect */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#7B3FF2]/20 to-transparent" />
+                </div>
+              </article>
+            ))}
           </div>
         </section>
 

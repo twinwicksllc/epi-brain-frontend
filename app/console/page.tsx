@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { userApi } from '@/lib/api/client';
-import { MessageSquare, Briefcase, BookOpen, Palette, Cross, Headphones, Brain, TrendingUp, Dumbbell, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import NeuronParticles from '@/components/NeuronParticles';
+import Image from 'next/image';
 
 interface UserProfile {
   id: string;
@@ -17,74 +18,64 @@ interface UserProfile {
 interface Personality {
   id: string;
   name: string;
-  icon: any;
+  image: string;
   description: string;
-  color: string;
 }
 
 const personalities: Personality[] = [
   {
     id: 'personal_friend',
     name: 'Personal Friend',
-    icon: MessageSquare,
+    image: '/personalities/personal_companion.jpeg',
     description: 'Your 24/7 companion for emotional support and daily check-ins',
-    color: 'from-purple-500 to-pink-500',
   },
   {
     id: 'sales_agent',
     name: 'Sales Agent',
-    icon: Briefcase,
+    image: '/personalities/sales_trainer.jpeg',
     description: 'Master NEBP methodology and practice sales scenarios',
-    color: 'from-blue-500 to-cyan-500',
   },
   {
     id: 'student_tutor',
     name: 'Student/Tutor',
-    icon: BookOpen,
+    image: '/personalities/student_tutor.jpeg',
     description: 'Personalized learning with performance tracking and grading',
-    color: 'from-green-500 to-emerald-500',
   },
   {
     id: 'kids_learning',
     name: 'Kids Learning',
-    icon: Palette,
+    image: '/personalities/kids_companion.jpeg',
     description: 'Fun, interactive learning for young minds',
-    color: 'from-yellow-500 to-orange-500',
   },
   {
     id: 'christian_companion',
     name: 'Christian Companion',
-    icon: Cross,
+    image: '/personalities/christian_companion1.jpeg',
     description: 'Prayer support, Bible study, and spiritual guidance',
-    color: 'from-indigo-500 to-purple-500',
   },
   {
     id: 'customer_service',
     name: 'Customer Service',
-    icon: Headphones,
+    image: '/personalities/customer_service.jpeg',
     description: 'Practice difficult scenarios and de-escalation techniques',
-    color: 'from-red-500 to-pink-500',
   },
   {
     id: 'psychology_expert',
     name: 'Psychology Expert',
-    icon: Brain,
+    image: '/personalities/psychology_expert.jpeg',
     description: 'Emotional intelligence and stress management support',
-    color: 'from-purple-500 to-blue-500',
   },
   {
     id: 'business_mentor',
     name: 'Business Mentor',
-    icon: TrendingUp,
+    image: '/personalities/business_mentor.jpeg',
     description: 'Strategic guidance for business growth and success',
-    color: 'from-cyan-500 to-blue-500',
   },
   {
     id: 'weight_loss_coach',
     name: 'Weight Loss Coach',
-    icon: Dumbbell,
+    image: '/personalities/weight_coach.jpeg',
     description: 'Personalized fitness and nutrition guidance',
-    color: 'from-green-500 to-teal-500',
   },
 ];
 
@@ -246,7 +237,6 @@ export default function ConsolePage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
             {personalities.map((personality) => {
-              const Icon = personality.icon;
               const isUnlocked = isPersonalityUnlocked(personality.id);
               
               return (
@@ -254,13 +244,27 @@ export default function ConsolePage() {
                   key={personality.id}
                   onClick={() => handlePersonalityClick(personality.id)}
                   className={`
-                    relative group rounded-xl border border-white/20 backdrop-blur-md transition-all duration-300
+                    relative overflow-hidden group rounded-xl border border-white/20 backdrop-blur-md transition-all duration-300 aspect-[3/4]
                     ${isUnlocked
-                      ? 'bg-white/5 hover:bg-white/10 hover:shadow-[0_0_30px_rgba(123,63,242,0.4)] hover:scale-[1.02] hover:border-[#7B3FF2]/50 cursor-pointer'
-                      : 'bg-[#1a102e]/80 grayscale opacity-50 hover:opacity-70 cursor-default'
+                      ? 'hover:shadow-[0_0_30px_rgba(123,63,242,0.4)] hover:border-[#7B3FF2]/50 cursor-pointer'
+                      : 'grayscale opacity-50 hover:opacity-70 cursor-default'
                     }
                   `}
                 >
+                  {/* Background Image */}
+                  <div className={`absolute inset-0 transition-transform duration-500 ${isUnlocked ? 'group-hover:scale-105' : ''}`}>
+                    <Image
+                      src={personality.image}
+                      alt={`${personality.name} AI Personality`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
+
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a102e] via-[#1a102e]/60 to-transparent" />
+
                   {/* Locked Badge */}
                   {!isUnlocked && (
                     <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-full border border-white/10">
@@ -269,30 +273,17 @@ export default function ConsolePage() {
                     </div>
                   )}
 
-                  {/* Card Content */}
-                  <div className="p-6">
-                    {/* Icon with gradient background */}
-                    <div className={`
-                      inline-flex items-center justify-center w-16 h-16 rounded-xl mb-4 transition-all duration-300
-                      bg-gradient-to-r ${personality.color}
-                      ${isUnlocked ? 'group-hover:scale-110' : ''}
-                    `}>
-                      <Icon size={32} className="text-white" />
-                    </div>
-
-                    {/* Title */}
+                  {/* Content */}
+                  <div className="relative h-full flex flex-col justify-end p-6">
                     <h3 className="text-xl font-semibold text-white mb-2">
                       {personality.name}
                     </h3>
-
-                    {/* Description */}
                     <p className={`text-sm leading-relaxed ${
                       isUnlocked ? 'text-[#E0D7FF]' : 'text-gray-400'
                     }`}>
                       {personality.description}
                     </p>
 
-                    {/* Unlock indicator for unlocked cards */}
                     {isUnlocked && (
                       <div className="mt-4 flex items-center gap-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <span className="bg-gradient-to-r from-[#7B3FF2] to-[#3B82F6] bg-clip-text text-transparent">Click to start</span>
@@ -300,7 +291,6 @@ export default function ConsolePage() {
                       </div>
                     )}
 
-                    {/* View Plans button for locked cards */}
                     {!isUnlocked && (
                       <div className="mt-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
                         <button
@@ -316,12 +306,11 @@ export default function ConsolePage() {
                     )}
                   </div>
 
-                  {/* Hover glow effect for unlocked cards */}
+                  {/* Hover Glow Effect for unlocked cards */}
                   {isUnlocked && (
-                    <div className={`
-                      absolute inset-0 rounded-xl opacity-0 group-hover:opacity-20 transition-all duration-300
-                      bg-gradient-to-r ${personality.color} blur-2xl -z-10
-                    `} style={{ transform: 'scale(0.95)' }} />
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#7B3FF2]/20 to-transparent" />
+                    </div>
                   )}
                 </div>
               );
