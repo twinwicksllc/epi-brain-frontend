@@ -35,7 +35,7 @@ const modes = [
   {
     id: 'christian_companion',
     name: 'Christian Companion',
-    image: '/personalities/christian_companion1.jpeg',
+    image: '/personalities/christian_companion.jpeg',
     description: 'Prayer support, Bible study, and spiritual guidance',
   },
   {
