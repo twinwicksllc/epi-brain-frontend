@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import NeuronParticles from '@/components/NeuronParticles';
 import { MessageSquare, Briefcase, BookOpen, Palette, Cross, Headphones, Brain, TrendingUp, Dumbbell } from 'lucide-react';
 
@@ -74,8 +75,49 @@ const modes = [
 
 export default function Home() {
   const router = useRouter();
+  const [displayedText, setDisplayedText] = useState('');
+  const [messageIndex, setMessageIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const messages = [
+    "Hi, I'm EPI. Want to hear me talk and show you something cool?",
+    "I can help you with sales, learning, or even prayer.",
+    "I have 9 distinct personalities, each focused on helping you!",
+    "Just say my name: EPI."
+  ];
 
   console.log('Home component rendering');
+  useEffect(() => {
+    const currentMessage = messages[messageIndex];
+    const typingSpeed = isDeleting ? 30 : 80;
+    const pauseBeforeDelete = 2000;
+    const pauseBeforeNext = 500;
+
+    if (!isDeleting && displayedText === currentMessage) {
+      // Finished typing, pause then start deleting
+      const timeout = setTimeout(() => setIsDeleting(true), pauseBeforeDelete);
+      return () => clearTimeout(timeout);
+    }
+
+    if (isDeleting && displayedText === '') {
+      // Finished deleting, move to next message
+      setIsDeleting(false);
+      setMessageIndex((prev) => (prev + 1) % messages.length);
+      const timeout = setTimeout(() => {}, pauseBeforeNext);
+      return () => clearTimeout(timeout);
+    }
+
+    // Type or delete one character
+    const timeout = setTimeout(() => {
+      setDisplayedText(
+        isDeleting
+          ? currentMessage.substring(0, displayedText.length - 1)
+          : currentMessage.substring(0, displayedText.length + 1)
+      );
+    }, typingSpeed);
+
+    return () => clearTimeout(timeout);
+  }, [displayedText, isDeleting, messageIndex]);
 
   const handleSignIn = () => {
     console.log('Sign in button clicked, navigating to /login');
@@ -125,10 +167,12 @@ export default function Home() {
               Life Companion
             </span>
           </h2>
-          <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Experience 9 distinct AI personalities designed to enhance your life, business, and personal growth.
-            Available 24/7 to support, guide, and inspire you.
-          </p>
+          <div className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed h-16 flex items-center justify-center">
+            <p className="min-h-[2em]">
+              {displayedText}
+              <span className="inline-block w-0.5 h-6 bg-[#7B3FF2] ml-1 animate-pulse"></span>
+            </p>
+          </div>
           <button
             onClick={handleGetStarted}
             className="px-8 py-4 bg-gradient-to-r from-[#7B3FF2] to-[#A78BFA] text-white text-lg font-semibold rounded-lg hover:shadow-lg hover:shadow-[#7B3FF2]/50 transition-all transform hover:scale-105"
