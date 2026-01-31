@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '@/lib/api/client';
@@ -12,6 +12,19 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [discoveryData, setDiscoveryData] = useState<{ name?: string; intent?: string } | null>(null);
+
+  useEffect(() => {
+    // Load discovery data from localStorage
+    const data = localStorage.getItem('discovery_data');
+    if (data) {
+      try {
+        setDiscoveryData(JSON.parse(data));
+      } catch (e) {
+        console.error('Failed to parse discovery data:', e);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +48,9 @@ export default function Register() {
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('refresh_token', response.refresh_token);
       
+      // Keep discovery data for the dashboard to use
+      // It will be cleared after the first dashboard load
+      
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Registration failed. Please try again.');
@@ -53,7 +69,13 @@ export default function Register() {
             className="mx-auto w-24 h-24 object-contain mb-4"
           />
           <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-          <p className="text-gray-400">Start your AI-powered journey today</p>
+          {discoveryData?.name ? (
+            <p className="text-gray-300">
+              Welcome back, <span className="text-[#7B3FF2] font-semibold">{discoveryData.name}</span>! Let's continue your journey.
+            </p>
+          ) : (
+            <p className="text-gray-400">Start your AI-powered journey today</p>
+          )}
         </div>
 
         <div className="bg-[#2d1b4e] border border-[#7B3FF2]/20 rounded-xl p-8">

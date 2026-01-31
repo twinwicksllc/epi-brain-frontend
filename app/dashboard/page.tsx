@@ -62,6 +62,31 @@ export default function Dashboard() {
       }
     }
 
+    // Check for discovery data from homepage
+    const discoveryData = localStorage.getItem("discovery_data");
+    if (discoveryData) {
+      try {
+        const data = JSON.parse(discoveryData);
+        console.log("Discovery data found:", data);
+        // You can use this data to pre-populate a welcome message or set initial mode
+        if (data.name) {
+          // Optionally add a welcome message
+          setMessages([
+            {
+              id: 'welcome',
+              role: 'assistant',
+              content: `Welcome back, ${data.name}! I remember you were interested in ${data.intent || 'exploring EPI'}. Let's continue from where we left off!`,
+              timestamp: new Date().toISOString(),
+            }
+          ]);
+        }
+        // Clear the discovery data after using it
+        localStorage.removeItem("discovery_data");
+      } catch (e) {
+        console.error("Error parsing discovery data:", e);
+      }
+    }
+
     setIsLoading(false);
 
     // Load conversations
