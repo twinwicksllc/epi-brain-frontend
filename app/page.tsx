@@ -48,35 +48,35 @@ export default function Home() {
         </header>
 
         {/* Hero Section with Discovery Chat */}
-        <section className="container mx-auto px-6 py-6 text-center" aria-labelledby="hero-heading">
-          <div className="mb-6">
+        <section className="container mx-auto px-6 py-4 text-center" aria-labelledby="hero-heading">
+          <div className="mb-4">
             <img
               src="/assets/brain-logo-landing.png"
               alt="EPI Brain Logo - AI Life Companion"
-              className="mx-auto w-[180px] h-[180px] object-contain"
+              className="mx-auto w-[120px] h-[120px] md:w-[180px] md:h-[180px] object-contain"
               width="180"
               height="180"
             />
           </div>
-          <h1 id="hero-heading" className="text-5xl md:text-6xl font-bold text-white mb-3">
+          <h1 id="hero-heading" className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2">
             EPI Brain
           </h1>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
             Your AI-Powered
             <span className="block bg-gradient-to-r from-[#7B3FF2] to-[#A78BFA] bg-clip-text text-transparent">
               Life Companion
             </span>
           </h2>
-          <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-gray-300 mb-6 max-w-2xl mx-auto">
             Experience the future of AI conversation. Try it now—no signup required.
           </p>
 
           {/* Embedded Discovery Chat */}
-          <div className="mb-8">
+          <div className="mb-6">
             <DiscoveryChat />
           </div>
 
-          <div className="text-sm text-gray-400 max-w-2xl mx-auto">
+          <div className="text-xs md:text-sm text-gray-400 max-w-2xl mx-auto">
             <p>
               Already have an account?{' '}
               <button

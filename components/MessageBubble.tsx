@@ -26,15 +26,15 @@ export default function MessageBubble({ role, content, isStreaming, currentDepth
   const borderColor = getBorderColor(currentDepth);
 
   return (
-    <div className={`flex gap-4 ${isUser ? 'justify-end' : 'justify-start'} mb-6`}>
+    <div className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
       {!isUser && (
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#7B3FF2] to-[#A78BFA] flex items-center justify-center">
-          <Bot size={20} className="text-white" />
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#7B3FF2] to-[#A78BFA] flex items-center justify-center">
+          <Bot size={16} className="text-white" />
         </div>
       )}
 
       <div
-        className={`max-w-[70%] rounded-2xl px-6 py-4 transition-all duration-500 ${
+        className={`max-w-[75%] rounded-2xl px-4 py-3 transition-all duration-500 text-sm ${
           isUser
             ? 'bg-[#7B3FF2] text-white'
             : 'bg-[#2d1b4e] text-white border'
@@ -44,14 +44,14 @@ export default function MessageBubble({ role, content, isStreaming, currentDepth
         <div className="whitespace-pre-wrap break-words">
           {content}
           {isStreaming && (
-            <span className="inline-block w-2 h-5 bg-[#7B3FF2] ml-1 animate-pulse" />
+            <span className="inline-block w-1.5 h-4 bg-[#7B3FF2] ml-1 animate-pulse" />
           )}
         </div>
       </div>
 
       {isUser && (
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#A78BFA] to-[#7B3FF2] flex items-center justify-center">
-          <User size={20} className="text-white" />
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#A78BFA] to-[#7B3FF2] flex items-center justify-center">
+          <User size={16} className="text-white" />
         </div>
       )}
     </div>

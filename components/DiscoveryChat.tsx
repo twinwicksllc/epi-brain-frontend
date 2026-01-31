@@ -38,7 +38,7 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   };
 
   const handleSendMessage = async (userMessage: string) => {
@@ -131,11 +131,11 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
     <div className="relative w-full max-w-3xl mx-auto">
       <div className="bg-[#1a102e]/60 backdrop-blur-xl border border-[#7B3FF2]/30 rounded-2xl shadow-2xl shadow-[#7B3FF2]/20 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#7B3FF2]/20 to-[#A78BFA]/20 border-b border-[#7B3FF2]/30 px-6 py-4">
+        <div className="bg-gradient-to-r from-[#7B3FF2]/20 to-[#A78BFA]/20 border-b border-[#7B3FF2]/30 px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">Try EPI Now</h3>
-              <p className="text-sm text-gray-300">
+              <h3 className="text-base font-semibold text-white">Try EPI Now</h3>
+              <p className="text-xs text-gray-300">
                 {failsafeTriggered 
                   ? 'Sign up to continue our conversation'
                   : `${MAX_EXCHANGES - exchangeCount} message${MAX_EXCHANGES - exchangeCount !== 1 ? 's' : ''} left in discovery`
@@ -167,7 +167,7 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
         </div>
 
         {/* Messages */}
-        <div className="h-[400px] overflow-y-auto p-6 space-y-4">
+        <div className="h-[280px] max-h-[280px] md:h-[320px] md:max-h-[320px] overflow-y-auto p-4 space-y-3">
           {messages.map((message, index) => (
             <MessageBubble
               key={index}
@@ -187,19 +187,19 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-[#7B3FF2]/30 p-4 relative">
+        <div className="border-t border-[#7B3FF2]/30 p-3 relative">
           {showSignUpOverlay && (
             <div className="absolute inset-0 bg-[#1a102e]/95 backdrop-blur-sm z-10 flex items-center justify-center">
-              <div className="text-center p-6">
-                <h4 className="text-xl font-semibold text-white mb-3">
+              <div className="text-center p-4">
+                <h4 className="text-lg font-semibold text-white mb-2">
                   Ready to Continue?
                 </h4>
-                <p className="text-gray-300 mb-6">
+                <p className="text-sm text-gray-300 mb-4">
                   Sign up free to unlock all features and personalities
                 </p>
                 <button
                   onClick={handleSignUp}
-                  className="px-8 py-3 bg-gradient-to-r from-[#7B3FF2] to-[#A78BFA] text-white text-lg font-semibold rounded-lg hover:shadow-lg hover:shadow-[#7B3FF2]/50 transition-all transform hover:scale-105"
+                  className="px-6 py-2.5 bg-gradient-to-r from-[#7B3FF2] to-[#A78BFA] text-white text-base font-semibold rounded-lg hover:shadow-lg hover:shadow-[#7B3FF2]/50 transition-all transform hover:scale-105"
                 >
                   Sign Up to Continue
                 </button>
@@ -222,8 +222,8 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
       </div>
 
       {/* Exchange counter */}
-      <div className="text-center mt-4">
-        <p className="text-sm text-gray-400">
+      <div className="text-center mt-3">
+        <p className="text-xs text-gray-400">
           {exchangeCount}/{MAX_EXCHANGES} discovery messages used
         </p>
       </div>
