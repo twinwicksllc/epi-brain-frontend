@@ -26,6 +26,7 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [exchangeCount, setExchangeCount] = useState(0);
   const [showSignUpOverlay, setShowSignUpOverlay] = useState(false);
+  const [failsafeTriggered, setFailsafeTriggered] = useState(false);
   const [capturedData, setCapturedData] = useState<{ name?: string; intent?: string }>({});
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -41,7 +42,7 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
   };
 
   const handleSendMessage = async (userMessage: string) => {
-    if (exchangeCount >= MAX_EXCHANGES) {
+    if (exchangeCount >= MAX_EXCHANGES || failsafeTriggered) {
       return;
     }
 
@@ -51,9 +52,21 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
     setIsLoading(true);
 
     // Simulate AI response based on context
+    // In a real implementation, this would be an API call that returns metadata
     setTimeout(() => {
       let aiResponse = '';
+      let responseMetadata: { failsafe_triggered?: boolean } = {};
       const currentExchange = exchangeCount + 1;
+
+      // Simulate failsafe detection (in real implementation, this comes from API)
+      // Example: if user sends off-topic message, backend returns failsafe_triggered: true
+      const isOffTopic = userMessage.toLowerCase().includes('weather') || 
+                         userMessage.toLowerCase().includes('recipe') ||
+                         userMessage.toLowerCase().includes('sports');
+      
+      if (isOffTopic) {
+        responseMetadata.failsafe_triggered = true;
+      }
 
       if (currentExchange === 1) {
         // First exchange - capture name
@@ -83,6 +96,22 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
         }
       }
 
+      // Check for failsafe in metadata
+      if (responseMetadata.failsafe_triggered) {
+        aiResponse = `I appreciate your interest! However, I'm specifically designed to help you discover how EPI can support your personal and professional growth. To explore all my capabilities and have deeper conversations, please sign up for free.`;
+        setFailsafeTriggered(true);
+        setShowSignUpOverlay(true);
+        setIsLoading(false);
+        
+        // Store any captured data
+        if (capturedData.name || capturedData.intent) {
+          localStorage.setItem('discovery_data', JSON.stringify(capturedData));
+        }
+        
+        setMessages([...newMessages, { role: 'assistant', content: aiResponse }]);
+        return;
+      }
+
       setMessages([...newMessages, { role: 'assistant', content: aiResponse }]);
       setExchangeCount(currentExchange);
       setIsLoading(false);
@@ -107,7 +136,10 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
             <div>
               <h3 className="text-lg font-semibold text-white">Try EPI Now</h3>
               <p className="text-sm text-gray-300">
-                {MAX_EXCHANGES - exchangeCount} message{MAX_EXCHANGES - exchangeCount !== 1 ? 's' : ''} left in discovery
+                {failsafeTriggered 
+                  ? 'Sign up to continue our conversation'
+                  : `${MAX_EXCHANGES - exchangeCount} message${MAX_EXCHANGES - exchangeCount !== 1 ? 's' : ''} left in discovery`
+                }
               </p>
             </div>
             
@@ -177,9 +209,11 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
           
           <ChatInput
             onSendMessage={handleSendMessage}
-            disabled={isLoading || showSignUpOverlay}
+            disabled={isLoading || showSignUpOverlay || failsafeTriggered}
             placeholder={
-              exchangeCount >= MAX_EXCHANGES
+              failsafeTriggered || showSignUpOverlay
+                ? 'Sign up to continue our conversation'
+                : exchangeCount >= MAX_EXCHANGES
                 ? 'Sign up to continue...'
                 : 'Type your message...'
             }
