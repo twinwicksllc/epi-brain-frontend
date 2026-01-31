@@ -10,18 +10,39 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [primaryGoal, setPrimaryGoal] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [discoveryData, setDiscoveryData] = useState<{ name?: string; intent?: string } | null>(null);
 
   useEffect(() => {
-    // Load discovery data from localStorage
-    const data = localStorage.getItem('discovery_data');
-    if (data) {
-      try {
-        setDiscoveryData(JSON.parse(data));
-      } catch (e) {
-        console.error('Failed to parse discovery data:', e);
+    // Load discovery data from localStorage using new keys
+    const tempName = localStorage.getItem('epi_temp_name');
+    const tempIntent = localStorage.getItem('epi_temp_intent');
+    
+    if (tempName || tempIntent) {
+      const data = {
+        name: tempName || undefined,
+        intent: tempIntent || undefined
+      };
+      setDiscoveryData(data);
+      
+      // Pre-fill form fields
+      if (tempName) setFullName(tempName);
+      if (tempIntent) setPrimaryGoal(tempIntent);
+    } else {
+      // Fallback to old discovery_data format for compatibility
+      const data = localStorage.getItem('discovery_data');
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          setDiscoveryData(parsed);
+          if (parsed.name) setFullName(parsed.name);
+          if (parsed.intent) setPrimaryGoal(parsed.intent);
+        } catch (e) {
+          console.error('Failed to parse discovery data:', e);
+        }
       }
     }
   }, []);
@@ -85,6 +106,36 @@ export default function Register() {
                 {error}
               </div>
             )}
+
+            <div>
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-2">
+                Full Name
+              </label>
+              <input
+                id="fullName"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                className="w-full px-4 py-3 bg-[#1a0a2e] border border-[#7B3FF2]/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#7B3FF2]"
+                placeholder="John Doe"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="primaryGoal" className="block text-sm font-medium text-gray-300 mb-2">
+                Primary Goal
+              </label>
+              <input
+                id="primaryGoal"
+                type="text"
+                value={primaryGoal}
+                onChange={(e) => setPrimaryGoal(e.target.value)}
+                required
+                className="w-full px-4 py-3 bg-[#1a0a2e] border border-[#7B3FF2]/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#7B3FF2]"
+                placeholder="e.g., Sales training, Personal growth"
+              />
+            </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">

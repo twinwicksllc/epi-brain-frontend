@@ -59,18 +59,22 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
         // First exchange - capture name
         const name = userMessage.trim();
         setCapturedData((prev) => ({ ...prev, name }));
+        // Immediately save to localStorage with new key
+        localStorage.setItem('epi_temp_name', name);
         aiResponse = `Nice to meet you, ${name}! What brings you here today? Are you looking for help with sales, learning, personal growth, or something else?`;
       } else if (currentExchange === 2) {
         // Second exchange - capture intent
         const intent = userMessage.trim();
         setCapturedData((prev) => ({ ...prev, intent }));
+        // Immediately save to localStorage with new key
+        localStorage.setItem('epi_temp_intent', intent);
         aiResponse = `Great! I can definitely help you with ${intent}. I have specialized AI personalities for different needs - from sales training to personal companionship to learning support. Want to explore more?`;
       } else if (currentExchange === 3) {
         // Third exchange - trigger sign up
         aiResponse = `That's wonderful! To continue our conversation and unlock all 9 AI personalities with full features, please sign up for free.`;
         setShowSignUpOverlay(true);
         
-        // Store data in localStorage for registration flow
+        // Store data in localStorage for registration flow (keep both formats for compatibility)
         const discoveryData = { ...capturedData, intent: userMessage.trim() };
         localStorage.setItem('discovery_data', JSON.stringify(discoveryData));
         
