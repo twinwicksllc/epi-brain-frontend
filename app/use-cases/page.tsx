@@ -51,12 +51,6 @@ const modes = [
     description: 'Fun, interactive learning for young minds',
   },
   {
-    id: 'christian_companion',
-    name: 'Christian Companion',
-    image: '/personalities/christian_companion.jpeg',
-    description: 'Prayer support, Bible study, and spiritual guidance',
-  },
-  {
     id: 'customer_service',
     name: 'Customer Service',
     image: '/personalities/customer_service.jpeg',
@@ -210,8 +204,15 @@ export default function UseCasesPage() {
 
         {/* Footer */}
         <footer className="container mx-auto px-6 py-8 border-t border-[#7B3FF2]/20">
-          <div className="text-center text-gray-400">
-            <p>© 2025 EPI Brain. Built with ❤️ by <a href="https://twin-wicks.com" target="_blank" rel="noopener noreferrer" className="text-[#7B3FF2] hover:text-[#A78BFA] transition-colors underline">Twin Wicks Digital Solutions</a></p>
+          <div className="text-center text-gray-400 space-y-2">
+            <p>
+              © 2025 EPI Brain. Built with ❤️ by <a href="https://twin-wicks.com" target="_blank" rel="noopener noreferrer" className="text-[#7B3FF2] hover:text-[#A78BFA] transition-colors underline">Twin Wicks Digital Solutions</a>
+            </p>
+            <p>
+              <Link href="/spiritual" className="text-[#7B3FF2] hover:text-[#A78BFA] transition-colors underline">
+                Christian Companion
+              </Link>
+            </p>
           </div>
         </footer>
       </main>
