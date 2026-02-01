@@ -35,8 +35,15 @@ export default function Home() {
               className="px-6 py-2 bg-transparent border border-[#7B3FF2] text-white rounded-lg hover:bg-[#7B3FF2] transition-colors"
               aria-label="View EPI Brain use cases"
             >
-              Use Cases
+              More Information
             </a>
+            <button
+              onClick={handleGetStarted}
+              className="px-6 py-2 bg-transparent border border-[#7B3FF2] text-white rounded-lg hover:bg-[#7B3FF2] transition-colors"
+              aria-label="Register for free"
+            >
+              Register for Free
+            </button>
             <button
               onClick={handleSignIn}
               className="px-6 py-2 bg-transparent border border-[#7B3FF2] text-white rounded-lg hover:bg-[#7B3FF2] transition-colors"

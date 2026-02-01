@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
-import { Send, Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX } from 'lucide-react';
+import { apiClient } from '@/lib/api/client';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -25,8 +26,8 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [exchangeCount, setExchangeCount] = useState(0);
-  const [showSignUpOverlay, setShowSignUpOverlay] = useState(false);
-  const [failsafeTriggered, setFailsafeTriggered] = useState(false);
+  const [signupBridgeTriggered, setSignupBridgeTriggered] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
   const [capturedData, setCapturedData] = useState<{ name?: string; intent?: string }>({});
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -42,80 +43,139 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
   };
 
   const handleSendMessage = async (userMessage: string) => {
-    if (exchangeCount >= MAX_EXCHANGES || failsafeTriggered) {
+    if (signupBridgeTriggered || isLoading) {
       return;
     }
 
-    // Add user message
     const newMessages = [...messages, { role: 'user' as const, content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
 
-    // Simulate AI response based on context
-    // In a real implementation, this would be an API call that returns metadata
-    setTimeout(() => {
-      let aiResponse = '';
-      let responseMetadata: { failsafe_triggered?: boolean } = {};
-      const currentExchange = exchangeCount + 1;
+    let nextCapturedData = { ...capturedData };
 
-      // Simulate failsafe detection (in real implementation, this comes from API)
-      // Example: if user sends off-topic message, backend returns failsafe_triggered: true
-      const isOffTopic = userMessage.toLowerCase().includes('weather') || 
-                         userMessage.toLowerCase().includes('recipe') ||
-                         userMessage.toLowerCase().includes('sports');
-      
-      if (isOffTopic) {
-        responseMetadata.failsafe_triggered = true;
-      }
+    const updateCapturedData = (updates: { name?: string; intent?: string }) => {
+      nextCapturedData = { ...nextCapturedData, ...updates };
+      setCapturedData(nextCapturedData);
+    };
 
-      if (currentExchange === 1) {
-        // First exchange - capture name
-        const name = userMessage.trim();
-        setCapturedData((prev) => ({ ...prev, name }));
-        // Immediately save to localStorage with new key
-        localStorage.setItem('epi_temp_name', name);
-        aiResponse = `Nice to meet you, ${name}! What brings you here today? Are you looking for help with sales, learning, personal growth, or something else?`;
-      } else if (currentExchange === 2) {
-        // Second exchange - capture intent
-        const intent = userMessage.trim();
-        setCapturedData((prev) => ({ ...prev, intent }));
-        // Immediately save to localStorage with new key
-        localStorage.setItem('epi_temp_intent', intent);
-        aiResponse = `Great! I can definitely help you with ${intent}. I have specialized AI personalities for different needs - from sales training to personal companionship to learning support. Want to explore more?`;
-      } else if (currentExchange === 3) {
-        // Third exchange - trigger sign up
-        aiResponse = `That's wonderful! To continue our conversation and unlock all 9 AI personalities with full features, please sign up for free.`;
-        setShowSignUpOverlay(true);
-        
-        // Store data in localStorage for registration flow (keep both formats for compatibility)
-        const discoveryData = { ...capturedData, intent: userMessage.trim() };
-        localStorage.setItem('discovery_data', JSON.stringify(discoveryData));
-        
+    const clearCapturedName = () => {
+      localStorage.removeItem('epi_temp_name');
+      const { name, ...rest } = nextCapturedData;
+      nextCapturedData = rest;
+      setCapturedData(nextCapturedData);
+    };
+
+    const persistDiscoveryData = () => {
+      if (nextCapturedData.name || nextCapturedData.intent) {
+        localStorage.setItem('discovery_data', JSON.stringify(nextCapturedData));
         if (onComplete) {
-          onComplete(discoveryData);
+          onComplete(nextCapturedData);
         }
       }
+    };
 
-      // Check for failsafe in metadata
-      if (responseMetadata.failsafe_triggered) {
-        aiResponse = `I appreciate your interest! However, I'm specifically designed to help you discover how EPI can support your personal and professional growth. To explore all my capabilities and have deeper conversations, please sign up for free.`;
-        setFailsafeTriggered(true);
-        setShowSignUpOverlay(true);
-        setIsLoading(false);
-        
-        // Store any captured data
-        if (capturedData.name || capturedData.intent) {
-          localStorage.setItem('discovery_data', JSON.stringify(capturedData));
-        }
-        
-        setMessages([...newMessages, { role: 'assistant', content: aiResponse }]);
-        return;
+    try {
+      const response = await apiClient.post('/chat', {
+        message: userMessage,
+      });
+      const responseData = response?.data ?? response;
+      const metadata =
+        responseData?.metadata ||
+        responseData?.meta ||
+        responseData?.response_metadata ||
+        responseData?.data?.metadata ||
+        {};
+
+      const aiResponse =
+        responseData?.content ||
+        responseData?.response ||
+        responseData?.message ||
+        responseData?.reply ||
+        '';
+
+      const capturedName = metadata?.captured_name || responseData?.captured_name || metadata?.name;
+      const capturedIntent = metadata?.captured_intent || responseData?.captured_intent || metadata?.intent;
+
+      if (capturedName && typeof capturedName === 'string') {
+        updateCapturedData({ name: capturedName });
+        localStorage.setItem('epi_temp_name', capturedName);
       }
 
-      setMessages([...newMessages, { role: 'assistant', content: aiResponse }]);
-      setExchangeCount(currentExchange);
+      if (capturedIntent && typeof capturedIntent === 'string') {
+        updateCapturedData({ intent: capturedIntent });
+        localStorage.setItem('epi_temp_intent', capturedIntent);
+      }
+
+      const nameCleared =
+        metadata?.name_cleared ||
+        metadata?.cleared_name ||
+        metadata?.invalid_name_format ||
+        responseData?.name_cleared ||
+        responseData?.invalid_name_format;
+
+      if (nameCleared) {
+        clearCapturedName();
+      }
+
+      const strikeCount =
+        metadata?.non_engagement_strikes ??
+        metadata?.strikes ??
+        metadata?.strike_count ??
+        responseData?.non_engagement_strikes ??
+        responseData?.strikes ??
+        responseData?.strike_count;
+
+      if (typeof strikeCount === 'number') {
+        setShowWarning(strikeCount >= 2);
+      }
+
+      const nextExchange = metadata?.exchange_count ?? responseData?.exchange_count;
+      if (typeof nextExchange === 'number') {
+        setExchangeCount(nextExchange);
+      } else {
+        setExchangeCount((prev) => prev + 1);
+      }
+
+      const signupBridge =
+        metadata?.signup_bridge ||
+        metadata?.signup_bridge_triggered ||
+        metadata?.bridge_to_signup ||
+        metadata?.final_signup_bridge ||
+        metadata?.failsafe_triggered ||
+        responseData?.signup_bridge ||
+        responseData?.signup_bridge_triggered ||
+        responseData?.failsafe_triggered;
+
+      if (signupBridge) {
+        setSignupBridgeTriggered(true);
+        setShowWarning(false);
+        persistDiscoveryData();
+      }
+
+      const fallbackClarification =
+        nameCleared && !aiResponse
+          ? 'Could you clarify your name so we can get started?'
+          : '';
+
+      setMessages([
+        ...newMessages,
+        {
+          role: 'assistant',
+          content: aiResponse || fallbackClarification || "Thanks! Let's keep going.",
+        },
+      ]);
+    } catch (error: any) {
+      console.error('Discovery chat error:', error);
+      setMessages([
+        ...newMessages,
+        {
+          role: 'assistant',
+          content: 'Sorry, I had trouble connecting. Please try again in a moment.',
+        },
+      ]);
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   const handleSignUp = () => {
@@ -136,9 +196,9 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
             <div>
               <h3 className="text-base font-semibold text-white">Try EPI Now</h3>
               <p className="text-xs text-gray-300">
-                {failsafeTriggered 
+                {signupBridgeTriggered
                   ? 'Sign up to continue our conversation'
-                  : `${MAX_EXCHANGES - exchangeCount} message${MAX_EXCHANGES - exchangeCount !== 1 ? 's' : ''} left in discovery`
+                  : `${Math.max(0, MAX_EXCHANGES - exchangeCount)} message${Math.max(0, MAX_EXCHANGES - exchangeCount) !== 1 ? 's' : ''} left in discovery`
                 }
               </p>
             </div>
@@ -147,12 +207,12 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
             <div className="relative group">
               <button
                 onClick={toggleVoice}
-                disabled={showSignUpOverlay}
+                disabled={signupBridgeTriggered}
                 className={`p-2 rounded-lg transition-all ${
                   isVoiceEnabled
                     ? 'bg-[#7B3FF2] text-white'
                     : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                } ${showSignUpOverlay ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${signupBridgeTriggered ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title={isVoiceEnabled ? 'Disable voice' : 'Enable voice'}
               >
                 {isVoiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
@@ -188,36 +248,32 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
 
         {/* Input Area */}
         <div className="border-t border-[#7B3FF2]/30 p-3 relative">
-          {showSignUpOverlay && (
-            <div className="absolute inset-0 bg-[#1a102e]/95 backdrop-blur-sm z-10 flex items-center justify-center">
-              <div className="text-center p-4">
-                <h4 className="text-lg font-semibold text-white mb-2">
-                  Ready to Continue?
-                </h4>
-                <p className="text-sm text-gray-300 mb-4">
-                  Sign up free to unlock all features and personalities
-                </p>
-                <button
-                  onClick={handleSignUp}
-                  className="px-6 py-2.5 bg-gradient-to-r from-[#7B3FF2] to-[#A78BFA] text-white text-base font-semibold rounded-lg hover:shadow-lg hover:shadow-[#7B3FF2]/50 transition-all transform hover:scale-105"
-                >
-                  Sign Up to Continue
-                </button>
-              </div>
+          {showWarning && !signupBridgeTriggered && (
+            <div className="mb-2 px-3 py-2 text-xs md:text-sm text-[#A78BFA] bg-[#2d1b4e]/60 border border-[#7B3FF2]/40 rounded-lg">
+              EPI is having trouble understanding—try being more specific so we can get started!
             </div>
           )}
-          
-          <ChatInput
-            onSendMessage={handleSendMessage}
-            disabled={isLoading || showSignUpOverlay || failsafeTriggered}
-            placeholder={
-              failsafeTriggered || showSignUpOverlay
-                ? 'Sign up to continue our conversation'
-                : exchangeCount >= MAX_EXCHANGES
-                ? 'Sign up to continue...'
-                : 'Type your message...'
-            }
-          />
+
+          {signupBridgeTriggered ? (
+            <div className="flex items-center justify-center">
+              <button
+                onClick={handleSignUp}
+                className="w-full px-6 py-3 bg-gradient-to-r from-[#7B3FF2] to-[#A78BFA] text-white text-base font-semibold rounded-lg hover:shadow-lg hover:shadow-[#7B3FF2]/50 transition-all transform hover:scale-105"
+              >
+                Register to Continue
+              </button>
+            </div>
+          ) : (
+            <ChatInput
+              onSendMessage={handleSendMessage}
+              disabled={isLoading}
+              placeholder={
+                exchangeCount >= MAX_EXCHANGES
+                  ? 'Sign up to continue...'
+                  : 'Type your message...'
+              }
+            />
+          )}
         </div>
       </div>
 
