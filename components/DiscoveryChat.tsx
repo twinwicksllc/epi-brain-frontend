@@ -75,7 +75,8 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
     };
 
     try {
-      const response = await apiClient.post('/chat', {
+      const response = await apiClient.post('/chat/message', {
+        mode: 'discovery',
         message: userMessage,
       });
       const responseData = response?.data ?? response;
