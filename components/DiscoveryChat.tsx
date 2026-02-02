@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
 import { Volume2, VolumeX } from 'lucide-react';
-import { apiClient } from '@/lib/api/client';
+import { publicChatApi } from '@/lib/api/publicClient';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -75,11 +75,7 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
     };
 
     try {
-      const response = await apiClient.post('/chat/message', {
-        mode: 'discovery',
-        message: userMessage,
-      });
-      const responseData = response?.data ?? response;
+      const responseData = await publicChatApi.sendMessage('discovery', userMessage);
       const metadata =
         responseData?.metadata ||
         responseData?.meta ||
