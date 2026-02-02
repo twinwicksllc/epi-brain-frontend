@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
+import RegistrationPromptModal from './RegistrationPromptModal';
 import { Volume2, VolumeX } from 'lucide-react';
 import { publicChatApi } from '@/lib/api/publicClient';
 
@@ -30,6 +31,8 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
   const [showWarning, setShowWarning] = useState(false);
   const [capturedData, setCapturedData] = useState<{ name?: string; intent?: string }>({});
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  const [inputDisabled, setInputDisabled] = useState(false);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const MAX_EXCHANGES = 3;
@@ -149,6 +152,14 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
         persistDiscoveryData();
       }
 
+      // Handle proactive engagement gating (limit reached)
+      const limitReached = responseData?.limit_reached || metadata?.limit_reached;
+      if (limitReached) {
+        setInputDisabled(true);
+        setShowRegistrationModal(true);
+        persistDiscoveryData();
+      }
+
       const fallbackClarification =
         nameCleared && !aiResponse
           ? 'Could you clarify your name so we can get started?'
@@ -263,9 +274,9 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
           ) : (
             <ChatInput
               onSendMessage={handleSendMessage}
-              disabled={isLoading}
+              disabled={isLoading || inputDisabled}
               placeholder={
-                exchangeCount >= MAX_EXCHANGES
+                exchangeCount >= MAX_EXCHANGES || inputDisabled
                   ? 'Sign up to continue...'
                   : 'Type your message...'
               }
@@ -280,6 +291,13 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
           {exchangeCount}/{MAX_EXCHANGES} discovery messages used
         </p>
       </div>
+
+      {/* Registration Prompt Modal */}
+      <RegistrationPromptModal
+        isOpen={showRegistrationModal}
+        onClose={() => setShowRegistrationModal(false)}
+        onRegister={handleSignUp}
+      />
     </div>
   );
 }
