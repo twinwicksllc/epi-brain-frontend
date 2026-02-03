@@ -135,76 +135,81 @@ export default function Header({
                   </div>
                   
                   {/* Current Phase and Clarity Metrics */}
-                  {(currentPhase || clarityMetrics) && (
-                    <div className="px-4 py-3 border-b border-[#7B3FF2]/20 bg-gradient-to-b from-[#7B3FF2]/10 to-transparent">
-                      {currentPhase && (
-                        <div className="mb-3">
-                          <p className="text-xs font-medium text-[#A78BFA] mb-1">Current Phase</p>
-                          <div className="inline-block px-3 py-1.5 bg-gradient-to-r from-[#7B3FF2]/40 to-[#6B46C1]/40 border border-[#A78BFA]/50 rounded-full shadow-lg shadow-[#7B3FF2]/50 backdrop-blur-md">
-                            <p className="text-xs font-semibold text-[#E9D5FF] capitalize tracking-wide">
-                              {currentPhase.charAt(0).toUpperCase() + currentPhase.slice(1)}
-                            </p>
+                  <div className="px-4 py-3 border-b border-[#7B3FF2]/20 bg-gradient-to-b from-[#7B3FF2]/10 to-transparent">
+                    {currentPhase && (
+                      <div className="mb-3">
+                        <p className="text-xs font-medium text-[#A78BFA] mb-1">Current Phase</p>
+                        <div className="inline-block px-3 py-1.5 bg-gradient-to-r from-[#7B3FF2]/40 to-[#6B46C1]/40 border border-[#A78BFA]/50 rounded-full shadow-lg shadow-[#7B3FF2]/50 backdrop-blur-md">
+                          <p className="text-xs font-semibold text-[#E9D5FF] capitalize tracking-wide">
+                            {currentPhase.charAt(0).toUpperCase() + currentPhase.slice(1)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Always show Clarity Metrics container */}
+                    <div className="bg-gradient-to-br from-[#7B3FF2]/15 to-[#6B46C1]/10 border border-[#A78BFA]/30 rounded-lg p-3 shadow-lg shadow-[#7B3FF2]/40 backdrop-blur-md">
+                      <p className="text-xs font-bold text-[#E9D5FF] mb-2.5 uppercase tracking-wider">Clarity Metrics</p>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-[#C4B5FD]">Clarity Score:</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-1.5 bg-[#2d1b4e] rounded-full overflow-hidden border border-[#7B3FF2]/30">
+                              <div 
+                                className="h-full bg-gradient-to-r from-[#A78BFA] to-[#7B3FF2] shadow-lg shadow-[#A78BFA]/60 rounded-full transition-all duration-300"
+                                style={{width: `${clarityMetrics ? Math.min(clarityMetrics.clarity_score * 100, 100) : 0}%`}}
+                              />
+                            </div>
+                            <span className="text-xs font-bold text-[#A78BFA] min-w-[2.5rem] text-right">
+                              {clarityMetrics ? `${(clarityMetrics.clarity_score * 100).toFixed(1)}%` : 'Calculating...'}
+                            </span>
                           </div>
                         </div>
-                      )}
-                      
-                      {clarityMetrics && (
-                        <div className="bg-gradient-to-br from-[#7B3FF2]/15 to-[#6B46C1]/10 border border-[#A78BFA]/30 rounded-lg p-3 shadow-lg shadow-[#7B3FF2]/40 backdrop-blur-md">
-                          <p className="text-xs font-bold text-[#E9D5FF] mb-2.5 uppercase tracking-wider">Clarity Metrics</p>
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs font-medium text-[#C4B5FD]">Clarity Score:</span>
-                              <div className="flex items-center gap-2">
-                                <div className="w-16 h-1.5 bg-[#2d1b4e] rounded-full overflow-hidden border border-[#7B3FF2]/30">
-                                  <div 
-                                    className="h-full bg-gradient-to-r from-[#A78BFA] to-[#7B3FF2] shadow-lg shadow-[#A78BFA]/60 rounded-full transition-all duration-300"
-                                    style={{width: `${Math.min(clarityMetrics.clarity_score * 100, 100)}%`}}
-                                  />
-                                </div>
-                                <span className="text-xs font-bold text-[#A78BFA] min-w-[2.5rem] text-right">{(clarityMetrics.clarity_score * 100).toFixed(1)}%</span>
-                              </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-[#C4B5FD]">Confidence:</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-1.5 bg-[#2d1b4e] rounded-full overflow-hidden border border-[#7B3FF2]/30">
+                              <div 
+                                className="h-full bg-gradient-to-r from-[#A78BFA] to-[#7B3FF2] shadow-lg shadow-[#A78BFA]/60 rounded-full transition-all duration-300"
+                                style={{width: `${clarityMetrics ? Math.min(clarityMetrics.confidence_level * 100, 100) : 0}%`}}
+                              />
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs font-medium text-[#C4B5FD]">Confidence:</span>
-                              <div className="flex items-center gap-2">
-                                <div className="w-16 h-1.5 bg-[#2d1b4e] rounded-full overflow-hidden border border-[#7B3FF2]/30">
-                                  <div 
-                                    className="h-full bg-gradient-to-r from-[#A78BFA] to-[#7B3FF2] shadow-lg shadow-[#A78BFA]/60 rounded-full transition-all duration-300"
-                                    style={{width: `${Math.min(clarityMetrics.confidence_level * 100, 100)}%`}}
-                                  />
-                                </div>
-                                <span className="text-xs font-bold text-[#A78BFA] min-w-[2.5rem] text-right">{(clarityMetrics.confidence_level * 100).toFixed(1)}%</span>
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs font-medium text-[#C4B5FD]">Topic Coherence:</span>
-                              <div className="flex items-center gap-2">
-                                <div className="w-16 h-1.5 bg-[#2d1b4e] rounded-full overflow-hidden border border-[#7B3FF2]/30">
-                                  <div 
-                                    className="h-full bg-gradient-to-r from-[#A78BFA] to-[#7B3FF2] shadow-lg shadow-[#A78BFA]/60 rounded-full transition-all duration-300"
-                                    style={{width: `${Math.min(clarityMetrics.topic_coherence * 100, 100)}%`}}
-                                  />
-                                </div>
-                                <span className="text-xs font-bold text-[#A78BFA] min-w-[2.5rem] text-right">{(clarityMetrics.topic_coherence * 100).toFixed(1)}%</span>
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs font-medium text-[#C4B5FD]">Depth Progression:</span>
-                              <div className="flex items-center gap-2">
-                                <div className="w-16 h-1.5 bg-[#2d1b4e] rounded-full overflow-hidden border border-[#7B3FF2]/30">
-                                  <div 
-                                    className="h-full bg-gradient-to-r from-[#A78BFA] to-[#7B3FF2] shadow-lg shadow-[#A78BFA]/60 rounded-full transition-all duration-300"
-                                    style={{width: `${Math.min(clarityMetrics.depth_progression * 100, 100)}%`}}
-                                  />
-                                </div>
-                                <span className="text-xs font-bold text-[#A78BFA] min-w-[2.5rem] text-right">{(clarityMetrics.depth_progression * 100).toFixed(1)}%</span>
-                              </div>
-                            </div>
+                            <span className="text-xs font-bold text-[#A78BFA] min-w-[2.5rem] text-right">
+                              {clarityMetrics ? `${(clarityMetrics.confidence_level * 100).toFixed(1)}%` : 'Calculating...'}
+                            </span>
                           </div>
                         </div>
-                      )}
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-[#C4B5FD]">Topic Coherence:</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-1.5 bg-[#2d1b4e] rounded-full overflow-hidden border border-[#7B3FF2]/30">
+                              <div 
+                                className="h-full bg-gradient-to-r from-[#A78BFA] to-[#7B3FF2] shadow-lg shadow-[#A78BFA]/60 rounded-full transition-all duration-300"
+                                style={{width: `${clarityMetrics ? Math.min(clarityMetrics.topic_coherence * 100, 100) : 0}%`}}
+                              />
+                            </div>
+                            <span className="text-xs font-bold text-[#A78BFA] min-w-[2.5rem] text-right">
+                              {clarityMetrics ? `${(clarityMetrics.topic_coherence * 100).toFixed(1)}%` : 'Calculating...'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-[#C4B5FD]">Depth Progression:</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-1.5 bg-[#2d1b4e] rounded-full overflow-hidden border border-[#7B3FF2]/30">
+                              <div 
+                                className="h-full bg-gradient-to-r from-[#A78BFA] to-[#7B3FF2] shadow-lg shadow-[#A78BFA]/60 rounded-full transition-all duration-300"
+                                style={{width: `${clarityMetrics ? Math.min(clarityMetrics.depth_progression * 100, 100) : 0}%`}}
+                              />
+                            </div>
+                            <span className="text-xs font-bold text-[#A78BFA] min-w-[2.5rem] text-right">
+                              {clarityMetrics ? `${(clarityMetrics.depth_progression * 100).toFixed(1)}%` : 'Calculating...'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  )}
+                  </div>
                   
                   {/* Mobile Voice Toggle */}
                   {isVoiceAvailable && (
