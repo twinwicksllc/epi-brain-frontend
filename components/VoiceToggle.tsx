@@ -24,15 +24,21 @@ export default function VoiceToggle({
       return "Loading...";
     }
     
-    const { tier, daily_usage, remaining } = voiceStats;
+    const { daily_usage, daily_limit, remaining } = voiceStats;
     
-    // If remaining is "unlimited", show that
-    if (remaining === "unlimited" || remaining === null) {
-      return `${daily_usage}/unlimited`;
+    // Check if unlimited (either as string or number)
+    const isUnlimited = 
+      remaining === "Unlimited" || 
+      remaining === "unlimited" || 
+      daily_limit === "Unlimited" ||
+      daily_limit === 999999;
+    
+    if (isUnlimited) {
+      return `${daily_usage}/Unlimited`;
     }
     
     // Otherwise show "X/limit"
-    const limit = voiceStats.daily_limit || 10;
+    const limit = daily_limit || 10;
     return `${daily_usage}/${limit}`;
   };
 

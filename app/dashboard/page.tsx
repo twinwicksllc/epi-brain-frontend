@@ -230,23 +230,66 @@ export default function Dashboard() {
     try {
       const response = await authApi.getVoiceStats();
       console.log("Voice stats loaded:", response.data);
-      setVoiceStats(response.data);
+      
+      let voiceStats = response.data || {};
+      
+      // Handle null or undefined limits from backend
+      if (voiceStats.daily_limit === null || voiceStats.daily_limit === undefined) {
+        // For admins, show unlimited
+        if (user?.is_admin) {
+          voiceStats.daily_limit = "Unlimited";
+          voiceStats.remaining = "Unlimited";
+        } else {
+          // For non-admins, fall back to tier-based limits
+          const isUnlimited = user?.tier === "pro" || user?.tier === "enterprise";
+          voiceStats.daily_limit = isUnlimited ? "Unlimited" : 10;
+          voiceStats.remaining = isUnlimited ? "Unlimited" : 10;
+        }
+      } else if (voiceStats.remaining === null || voiceStats.remaining === undefined) {
+        // Calculate remaining if not provided
+        const limit = voiceStats.daily_limit;
+        const usage = voiceStats.daily_usage || 0;
+        if (limit === "Unlimited") {
+          voiceStats.remaining = "Unlimited";
+        } else {
+          voiceStats.remaining = Math.max(0, limit - usage);
+        }
+      }
+      
+      setVoiceStats(voiceStats);
     } catch (error: any) {
       console.error("Error loading voice stats:", error);
       console.error("Voice stats error details:", error.response?.data || error.message);
       
-      // Set default stats if API fails
-      const userTier = user?.tier || "free";
-      const isUnlimited = userTier === "pro" || userTier === "enterprise";
+      // Set default stats if API fails, checking for admin status
+      let defaultStats;
       
-      setVoiceStats({
-        tier: userTier,
-        daily_usage: 0,
-        daily_limit: isUnlimited ? 999999 : 10,
-        remaining: isUnlimited ? "unlimited" : 10,
-        total_usage: 0,
-        voice_model: "eleven_multilingual_v2",
-      });
+      if (user?.is_admin) {
+        // Admins get unlimited by default
+        defaultStats = {
+          tier: "admin",
+          daily_usage: 0,
+          daily_limit: "Unlimited",
+          remaining: "Unlimited",
+          total_usage: 0,
+          voice_model: "eleven_multilingual_v2",
+        };
+      } else {
+        // Non-admins get tier-based limits
+        const userTier = user?.tier || "free";
+        const isUnlimited = userTier === "pro" || userTier === "enterprise";
+        
+        defaultStats = {
+          tier: userTier,
+          daily_usage: 0,
+          daily_limit: isUnlimited ? "Unlimited" : 10,
+          remaining: isUnlimited ? "Unlimited" : 10,
+          total_usage: 0,
+          voice_model: "eleven_multilingual_v2",
+        };
+      }
+      
+      setVoiceStats(defaultStats);
     }
   };
 
