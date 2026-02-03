@@ -160,6 +160,11 @@ export const userApi = {
     return response.data;
   },
 
+  getProfileWithMetrics: async () => {
+    const response = await apiClient.get('/users/me');
+    return response.data;
+  },
+
   updateProfile: async (data: any) => {
     const response = await apiClient.put('/users/me', data);
     return response.data;

@@ -15,14 +15,22 @@ interface Message {
 
 interface DiscoveryChatProps {
   onComplete?: (data: { name?: string; intent?: string }) => void;
+  siloId?: string;
+  siloName?: string;
+  initialGreeting?: string;
 }
 
-export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
+export default function DiscoveryChat({
+  onComplete,
+  siloId = 'general',
+  siloName = 'EPI Brain',
+  initialGreeting = "Hi! I'm EPI, your AI companion. What's your name?",
+}: DiscoveryChatProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hi! I'm EPI, your AI companion. What's your name?",
+      content: initialGreeting,
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +44,14 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const MAX_EXCHANGES = 3;
+
+  // Save silo context to localStorage on mount
+  useEffect(() => {
+    if (siloId) {
+      localStorage.setItem('epi_silo_id', siloId);
+      localStorage.setItem('epi_silo_name', siloName);
+    }
+  }, [siloId, siloName]);
 
   useEffect(() => {
     scrollToBottom();
@@ -71,6 +87,12 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
     const persistDiscoveryData = () => {
       if (nextCapturedData.name || nextCapturedData.intent) {
         localStorage.setItem('discovery_data', JSON.stringify(nextCapturedData));
+          // Also save the captured name separately for easier access
+          if (nextCapturedData.name) {
+            localStorage.setItem('captured_name', nextCapturedData.name);
+            localStorage.setItem('epi_silo_id', siloId);
+            localStorage.setItem('epi_silo_name', siloName);
+          }
         if (onComplete) {
           onComplete(nextCapturedData);
         }
@@ -202,7 +224,7 @@ export default function DiscoveryChat({ onComplete }: DiscoveryChatProps) {
         <div className="bg-gradient-to-r from-[#7B3FF2]/20 to-[#A78BFA]/20 border-b border-[#7B3FF2]/30 px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-semibold text-white">Try EPI Now</h3>
+                <h3 className="text-base font-semibold text-white">Try {siloName} Now</h3>
               <p className="text-xs text-gray-300">
                 {signupBridgeTriggered
                   ? 'Sign up to continue our conversation'

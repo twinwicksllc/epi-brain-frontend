@@ -9,9 +9,9 @@ import ChatInput from "@/components/ChatInput";
 import MessageBubble from "@/components/MessageBubble";
 import VoiceToggle from "@/components/VoiceToggle";
 import VoiceErrorToast from "@/components/VoiceErrorToast";
-import { authApi, chatApi, modesApi } from "@/lib/api/client";
+import { authApi, chatApi, modesApi, userApi } from "@/lib/api/client";
 import { VoiceManager } from "@/lib/voice/VoiceManager";
-import { Message, Conversation } from "@/types";
+import { Message, Conversation, ClarityMetrics } from "@/types";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -32,6 +32,10 @@ export default function Dashboard() {
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [siloName, setSiloName] = useState<string>("EPI Brain");
+  const [currentPhase, setCurrentPhase] = useState<"discovery" | "strategy" | "action" | null>(null);
+  const [clarityMetrics, setClarityMetrics] = useState<ClarityMetrics | null>(null);
+  const [capturedIntentUsed, setCapturedIntentUsed] = useState(false);
 
   // Calculate background gradient based on depth
   const getDepthGradient = (depth: number) => {
@@ -62,28 +66,85 @@ export default function Dashboard() {
       }
     }
 
-    // Check for discovery data from homepage
-    const discoveryData = localStorage.getItem("discovery_data");
-    if (discoveryData) {
+    // Fetch user profile with phase and clarity metrics
+    const loadUserProfile = async () => {
       try {
-        const data = JSON.parse(discoveryData);
-        console.log("Discovery data found:", data);
-        // You can use this data to pre-populate a welcome message or set initial mode
-        if (data.name) {
-          // Optionally add a welcome message
+        const profile = await userApi.getProfileWithMetrics();
+        console.log("User profile loaded:", profile);
+        
+        if (profile) {
+          setUser(profile);
+          
+          // Set phase from profile
+          if (profile.current_phase) {
+            setCurrentPhase(profile.current_phase);
+            console.log("Current phase:", profile.current_phase);
+          }
+          
+          // Set clarity metrics from profile
+          if (profile.clarity_metrics) {
+            setClarityMetrics(profile.clarity_metrics);
+            console.log("Clarity metrics:", profile.clarity_metrics);
+          }
+          
+          // Store user data in localStorage for quick access
+          localStorage.setItem("user_data", JSON.stringify(profile));
+        }
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+      }
+    };
+
+    loadUserProfile();
+
+    // Load silo context from localStorage
+    const savedSiloName = localStorage.getItem("epi_silo_name");
+    if (savedSiloName) {
+      setSiloName(savedSiloName);
+    }
+
+    // Check for captured intent from discovery session (context continuity)
+    const capturedIntent = localStorage.getItem("captured_intent");
+    
+    // Check for discovery data from homepage (for backwards compatibility)
+    const discoveryData = localStorage.getItem("discovery_data");
+    const tempName = localStorage.getItem("epi_temp_name");
+    const tempIntent = localStorage.getItem("epi_temp_intent");
+    
+    if (!capturedIntentUsed && (capturedIntent || tempIntent || discoveryData)) {
+      try {
+        let name = tempName;
+        let intent = tempIntent || capturedIntent;
+        
+        // Fallback to discovery_data if new format not available
+        if (!intent && discoveryData) {
+          const data = JSON.parse(discoveryData);
+          name = name || data.name;
+          intent = intent || data.intent;
+        }
+        
+        console.log("Context continuity - using captured intent:", { name, intent });
+        
+        if (name || intent) {
+          // Prime the first authenticated message with captured intent
           setMessages([
             {
               id: 'welcome',
               role: 'assistant',
-              content: `Welcome back, ${data.name}! I remember you were interested in ${data.intent || 'exploring EPI'}. Let's continue from where we left off!`,
+              content: `Welcome back${name ? `, ${name}` : ''}! I remember you were interested in ${intent || 'exploring EPI'}. Let's continue from where we left off!`,
               timestamp: new Date().toISOString(),
             }
           ]);
+          setCapturedIntentUsed(true);
         }
+        
         // Clear the discovery data after using it
         localStorage.removeItem("discovery_data");
+        localStorage.removeItem("captured_intent");
+        localStorage.removeItem("epi_temp_name");
+        localStorage.removeItem("epi_temp_intent");
       } catch (e) {
-        console.error("Error parsing discovery data:", e);
+        console.error("Error processing captured intent:", e);
       }
     }
 
@@ -388,6 +449,9 @@ export default function Dashboard() {
           onVoiceGenderChange={handleVoiceGenderChange}
           voiceStats={voiceStats}
           isVoiceAvailable={isVoiceAvailable}
+          siloName={siloName}
+          currentPhase={currentPhase}
+          clarityMetrics={clarityMetrics}
         />
 
         {/* Messages Area */}

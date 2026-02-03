@@ -20,6 +20,13 @@ export interface Conversation {
   user_id?: string;
 }
 
+export interface ClarityMetrics {
+  clarity_score: number;
+  confidence_level: number;
+  topic_coherence: number;
+  depth_progression: number;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -29,6 +36,8 @@ export interface User {
   last_login?: Date;
   message_count: number;
   voice_usage_count: number;
+  current_phase?: "discovery" | "strategy" | "action";
+  clarity_metrics?: ClarityMetrics;
 }
 
 export interface AI_MODE {
@@ -70,3 +79,31 @@ export interface ConversationResponse {
   depth_enabled?: boolean;
   messages?: Message[];
 }
+export interface SiloContext {
+  siloId: string;
+  siloName: string;
+  initialGreeting: string;
+}
+
+export const SILO_CONTEXTS: Record<string, SiloContext> = {
+  general: {
+    siloId: 'general',
+    siloName: 'EPI Brain',
+    initialGreeting: "Hi! I'm EPI, your AI companion. What's your name?",
+  },
+  sales_mentor: {
+    siloId: 'sales_mentor',
+    siloName: 'EPI Sales Tutor',
+    initialGreeting: 'Hi, I\'m EPI. Ready to sharpen your sales skills and close more deals? What should I call you?',
+  },
+  spiritual_guide: {
+    siloId: 'spiritual_guide',
+    siloName: 'EPI Spiritual Guide',
+    initialGreeting: 'Welcome. I\'m here to walk with you on your spiritual journey today. What is your name?',
+  },
+  education_coach: {
+    siloId: 'education_coach',
+    siloName: 'EPI Education Coach',
+    initialGreeting: 'Hello! I\'m EPI, your learning companion. Ready to explore and grow? What\'s your name?',
+  },
+};

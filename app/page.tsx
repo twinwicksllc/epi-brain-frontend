@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import NeuronParticles from '@/components/NeuronParticles';
-import DiscoveryChat from '@/components/DiscoveryChat';
+import SiloedDiscoveryChat from '@/components/SiloedDiscoveryChat';
 
 // Force cache invalidation - deployed 2025-01-12
 
@@ -80,7 +80,7 @@ export default function Home() {
 
           {/* Embedded Discovery Chat */}
           <div className="mb-6">
-            <DiscoveryChat />
+            <SiloedDiscoveryChat />
           </div>
 
           <div className="text-xs md:text-sm text-gray-400 max-w-2xl mx-auto">

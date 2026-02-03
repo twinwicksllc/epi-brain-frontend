@@ -46,8 +46,8 @@ export default function Login() {
         localStorage.setItem('user', JSON.stringify(user));
       }
       
-      console.log('Login successful, redirecting to console...');
-      router.push('/console');
+      console.log('Login successful, redirecting to dashboard...');
+      router.push('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.response?.data?.detail || 'Login failed. Please try again.');
