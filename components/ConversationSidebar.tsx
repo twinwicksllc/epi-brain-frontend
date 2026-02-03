@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Conversation } from "@/types";
+import { Conversation, User } from "@/types";
 import BrainLogo from "./BrainLogo";
+import { ChevronDown } from "lucide-react";
 
 interface ConversationSidebarProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface ConversationSidebarProps {
   onNewConversation: () => void;
   onDeleteConversation: (id: string) => void;
   isLoading?: boolean;
+  user?: User | null;
 }
 
 export default function ConversationSidebar({
@@ -25,9 +27,44 @@ export default function ConversationSidebar({
   onNewConversation,
   onDeleteConversation,
   isLoading = false,
+  user,
 }: ConversationSidebarProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [modeFilter, setModeFilter] = useState<string>('all');
+  const [activeLens, setActiveLens] = useState<string>(
+    typeof window !== 'undefined' ? localStorage.getItem('active_lens') || 'general' : 'general'
+  );
+  const [lensDropdownOpen, setLensDropdownOpen] = useState(false);
+
+  const silos = [
+    { id: 'general', name: 'EPI Brain', color: 'from-[#7B3FF2] to-[#6B46C1]' },
+    { id: 'sales_mentor', name: 'Sales Tutor', color: 'from-[#10b981] to-[#059669]' },
+    { id: 'spiritual_guide', name: 'Spiritual Guide', color: 'from-[#f59e0b] to-[#d97706]' },
+    { id: 'education_coach', name: 'Education Coach', color: 'from-[#3b82f6] to-[#1d4ed8]' },
+  ];
+
+  const handleLensChange = (siloId: string) => {
+    setActiveLens(siloId);
+    localStorage.setItem('active_lens', siloId);
+    localStorage.setItem('epi_silo_id', siloId);
+    
+    // Update silo name based on selection
+    const selectedSilo = silos.find(s => s.id === siloId);
+    if (selectedSilo) {
+      localStorage.setItem('epi_silo_name', `EPI ${selectedSilo.name}`);
+    }
+    
+    setLensDropdownOpen(false);
+    setModeFilter('all'); // Reset mode filter when changing lens
+  };
+
+  const activeSilo = silos.find(s => s.id === activeLens);
+  
+  const filteredConversationsByLens = conversations.filter(conv => {
+    const convSilo = localStorage.getItem(`conv_silo_${conv.id}`) || 'general';
+    return activeLens === 'all' || convSilo === activeLens;
+  });
+  
   
   // Helper to format mode name for display
   const formatModeName = (mode: string) => {
@@ -43,13 +80,13 @@ export default function ConversationSidebar({
     return modeMap[mode] || mode.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
   
-  // Filter conversations by mode
+  // Filter conversations by mode from lens-filtered conversations
   const filteredConversations = modeFilter === 'all' 
-    ? conversations 
-    : conversations.filter(conv => conv.mode === modeFilter);
+    ? filteredConversationsByLens
+    : filteredConversationsByLens.filter(conv => conv.mode === modeFilter);
   
-  // Get unique modes from conversations
-  const availableModes = Array.from(new Set(conversations.map(conv => conv.mode)));
+  // Get unique modes from lens-filtered conversations
+  const availableModes = Array.from(new Set(filteredConversationsByLens.map(conv => conv.mode)));
 
   return (
     <>
@@ -70,6 +107,52 @@ export default function ConversationSidebar({
         <div className="border-b border-[#7B3FF2]/20">
           <BrainLogo isLoading={isLoading} />
         </div>
+
+        {/* Lens Switcher - Admin Only */}
+        {user?.is_admin && (
+          <div className="p-4 border-b border-[#7B3FF2]/20 bg-[#1a0f2e]/50">
+            <div className="relative">
+              <button
+                onClick={() => setLensDropdownOpen(!lensDropdownOpen)}
+                className={`w-full px-3 py-2 rounded-lg border transition-all flex items-center justify-between text-sm font-medium ${
+                  activeSilo?.id === 'general' 
+                    ? 'bg-gradient-to-r from-[#7B3FF2]/30 to-[#6B46C1]/30 border-[#7B3FF2]/50 text-[#E9D5FF]'
+                    : activeSilo?.id === 'sales_mentor'
+                    ? 'bg-gradient-to-r from-[#10b981]/20 to-[#059669]/20 border-[#10b981]/50 text-[#a7f3d0]'
+                    : activeSilo?.id === 'spiritual_guide'
+                    ? 'bg-gradient-to-r from-[#f59e0b]/20 to-[#d97706]/20 border-[#f59e0b]/50 text-[#fef3c7]'
+                    : 'bg-gradient-to-r from-[#3b82f6]/20 to-[#1d4ed8]/20 border-[#3b82f6]/50 text-[#bfdbfe]'
+                }`}
+              >
+                <span className="truncate">
+                  Active Lens: {activeSilo?.name}
+                </span>
+                <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${lensDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Lens Dropdown */}
+              {lensDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-[#2d1b4e] border border-[#7B3FF2]/30 rounded-lg shadow-xl z-40">
+                  {silos.map((silo) => (
+                    <button
+                      key={silo.id}
+                      onClick={() => handleLensChange(silo.id)}
+                      className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2 ${
+                        activeLens === silo.id
+                          ? 'bg-[#7B3FF2]/20 text-white border-l-2 border-[#7B3FF2]'
+                          : 'text-white/70 hover:text-white hover:bg-[#7B3FF2]/10'
+                      }`}
+                    >
+                      <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${silo.color}`} />
+                      {silo.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-white/50 mt-2">Switch active lens to filter conversations</p>
+          </div>
+        )}
 
         {/* Header */}
         <div className="p-4 border-b border-[#7B3FF2]/20">

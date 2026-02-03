@@ -32,6 +32,7 @@ export interface User {
   email: string;
   name: string;
   tier: "FREE" | "PRO" | "ENTERPRISE";
+  is_admin?: boolean;
   created_at: Date;
   last_login?: Date;
   message_count: number;

@@ -288,6 +288,11 @@ export default function Dashboard() {
       // Update conversation ID if this is a new conversation
       if (response.conversation_id && response.conversation_id !== currentConversationId) {
         setCurrentConversationId(response.conversation_id);
+        
+        // Store the silo context for this conversation (for lens filtering)
+        const activeLens = localStorage.getItem('active_lens') || 'general';
+        localStorage.setItem(`conv_silo_${response.conversation_id}`, activeLens);
+        
         // Reload conversations to update the list
         loadConversations();
       }
@@ -433,6 +438,7 @@ export default function Dashboard() {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         isLoading={isAiThinking}
+        user={user}
       />
 
       {/* Main Content */}
