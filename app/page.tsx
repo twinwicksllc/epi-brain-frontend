@@ -142,7 +142,7 @@ export default function Home() {
           </p>
 
           {/* Search Input Box */}
-          <div className="w-full max-w-2xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl px-5 py-5">
+          <div className="w-full max-w-[52rem] bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl px-5 py-5">
             <div className="flex items-center gap-3 mb-3">
               <input
                 type="text"
