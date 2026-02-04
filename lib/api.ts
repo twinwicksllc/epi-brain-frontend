@@ -1,5 +1,9 @@
-export const API_ROOT = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-export const API_BASE = `${API_ROOT}/api/v1`;
+const rawApiRoot = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+export const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
+export const API_ROOT = rawApiRoot.replace(/\/+$/, '');
+export const API_BASE = API_ROOT.includes(`/api/${API_VERSION}`)
+  ? API_ROOT
+  : `${API_ROOT}/api/${API_VERSION}`;
 
 export interface ApiError extends Error {
   status?: number;
