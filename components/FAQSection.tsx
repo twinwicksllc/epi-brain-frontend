@@ -14,10 +14,6 @@ const faqData: FAQItem[] = [
     answer: "EPI Brain is an AI-powered life companion platform featuring 9 distinct AI personalities including Personal Friend, Business Mentor, Psychology Expert, Christian Companion, and more. Available 24/7 to support emotional well-being, business growth, learning, fitness, and personal development."
   },
   {
-    question: "How many AI personalities does EPI Brain have?",
-    answer: "EPI Brain offers 9 specialized AI personalities: Personal Friend, Sales Agent, Student/Tutor, Kids Learning, Christian Companion, Customer Service, Psychology Expert, Business Mentor, and Weight Loss Coach."
-  },
-  {
     question: "Is EPI Brain free to use?",
     answer: "Yes, EPI Brain offers a free tier to get started. You can experience the full power of AI companionship with 9 specialized personalities at no initial cost."
   },
