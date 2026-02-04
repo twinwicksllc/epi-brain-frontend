@@ -301,7 +301,20 @@ export default function Home() {
           </div>
         </section>
 
-        <VaultView isOpen={isVaultOpen} onClose={() => setIsVaultOpen(false)} />
+        {isVaultOpen && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 px-4 py-6">
+            <div className="w-full max-w-4xl rounded-2xl bg-white/95 p-6 shadow-2xl relative">
+              <button
+                onClick={() => setIsVaultOpen(false)}
+                className="absolute top-4 right-4 text-sm text-gray-600 hover:text-gray-900"
+                aria-label="Close vault modal"
+              >
+                Close
+              </button>
+              <VaultView isOpen={isVaultOpen} onClose={() => setIsVaultOpen(false)} />
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
