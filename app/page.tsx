@@ -1,13 +1,52 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import NeuronParticles from '@/components/NeuronParticles';
-import { Paperclip, Search, BookOpen, Mic, Heart } from 'lucide-react';
+import { Paperclip, Search, BookOpen, Mic } from 'lucide-react';
+import { apiRequest, API_ROOT } from '@/lib/api';
 
 export default function Home() {
   const router = useRouter();
   const [inputValue, setInputValue] = useState('');
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const pingBackend = async () => {
+      try {
+        const response = await fetch(`${API_ROOT}/health`, { method: 'GET', mode: 'cors' });
+        if (!response.ok) {
+          throw new Error(`Health check failed (${response.status})`);
+        }
+        if (!cancelled) {
+          showToast('Connection Successful', 'success');
+        }
+      } catch (error: any) {
+        const message =
+          typeof error?.message === 'string' && error.message.toLowerCase().includes('failed to fetch')
+            ? 'Connection blocked by CORS. Please allow this origin in the backend.'
+            : error?.message || 'Connection failed.';
+        if (!cancelled) {
+          showToast(message, 'error');
+        }
+      }
+    };
+
+    pingBackend();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSignIn = () => {
     router.push('/login');
@@ -17,9 +56,24 @@ export default function Home() {
     router.push('/register');
   };
 
-  const handleVoice = () => {
-    // Handle voice input
-    console.log('Voice button clicked');
+  const handleVoice = async () => {
+    if (!inputValue.trim()) {
+      showToast('Enter a message to synthesize.', 'error');
+      return;
+    }
+
+    setIsSynthesizing(true);
+    try {
+      await apiRequest('/voice/synthesize', {
+        method: 'POST',
+        body: JSON.stringify({ text: inputValue.trim() }),
+      });
+      showToast('Voice synthesis requested.', 'success');
+    } catch (error: any) {
+      showToast(error?.message || 'Voice synthesis failed.', 'error');
+    } finally {
+      setIsSynthesizing(false);
+    }
   };
 
   const handleAttach = () => {
@@ -27,16 +81,50 @@ export default function Home() {
   };
 
   const handleSearch = () => {
-    console.log('Search clicked');
+    handleSendMessage();
   };
 
   const handleStudy = () => {
     console.log('Study clicked');
   };
 
+  const handleSendMessage = async () => {
+    if (!inputValue.trim()) return;
+    setIsSending(true);
+
+    try {
+      await apiRequest('/chat/message', {
+        method: 'POST',
+        body: JSON.stringify({
+          mode: 'default',
+          message: inputValue.trim(),
+        }),
+      });
+      showToast('Message sent.', 'success');
+      setInputValue('');
+    } catch (error: any) {
+      showToast(error?.message || 'Failed to send message.', 'error');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a0a2e] to-[#2d1b4e] relative overflow-hidden">
       <NeuronParticles />
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 z-50 max-w-md rounded-lg border px-4 py-3 shadow-lg backdrop-blur-md transition-all ${
+            toast.type === 'success'
+              ? 'bg-green-500/90 border-green-400 text-white'
+              : 'bg-red-500/90 border-red-400 text-white'
+          }`}
+          role="status"
+          aria-live="polite"
+        >
+          {toast.message}
+        </div>
+      )}
       
       <main className="relative z-10">
         {/* Header */}
@@ -86,16 +174,23 @@ export default function Home() {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isSending) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
                 placeholder="Ask anything"
                 className="flex-1 px-4 py-3 text-gray-900 text-lg bg-transparent border-none outline-none placeholder:text-gray-500"
               />
               <button
                 onClick={handleVoice}
-                className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+                disabled={isSynthesizing}
+                className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 aria-label="Use voice input"
               >
                 <Mic className="w-5 h-5" />
-                <span>Voice</span>
+                <span>{isSynthesizing ? 'Working...' : 'Voice'}</span>
               </button>
             </div>
 

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authApi } from '@/lib/api/client';
+import { apiRequest } from '@/lib/api';
 
 export default function Login() {
   const router = useRouter();
@@ -18,7 +18,13 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await authApi.login(email, password);
+      const response = await apiRequest<{ access_token: string; refresh_token: string; user?: any | null }>(
+        '/auth/login',
+        {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+        }
+      );
       
       // Store tokens efficiently
       const tokenData = {

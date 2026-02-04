@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authApi } from '@/lib/api/client';
+import { apiRequest } from '@/lib/api';
 
 export default function Register() {
   const router = useRouter();
@@ -64,10 +64,27 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const response = await authApi.register(email, password);
+      const response = await apiRequest<{ access_token: string; refresh_token: string; user?: any | null }>(
+        '/auth/register',
+        {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+        }
+      );
       
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
+      const tokenData = {
+        access_token: response.access_token,
+        refresh_token: response.refresh_token,
+        token: response.access_token,
+      };
+
+      Object.entries(tokenData).forEach(([key, value]) => {
+        localStorage.setItem(key, value as string);
+      });
+
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify(response.user));
+      }
       
       // Keep discovery data for the dashboard to use
       // It will be cleared after the first dashboard load
