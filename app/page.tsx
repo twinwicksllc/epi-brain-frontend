@@ -134,7 +134,6 @@ export default function Home() {
                 <a href="/terms" className="underline hover:text-gray-900">Terms</a>
                 <span>and have read our</span>
                 <a href="/privacy" className="underline hover:text-gray-900">Privacy Policy</a>
-                <Heart className="w-3 h-3 ml-1" />
               </div>
               <div className="text-xs text-gray-600">
                 <a href="/use-cases" className="underline hover:text-gray-900">
