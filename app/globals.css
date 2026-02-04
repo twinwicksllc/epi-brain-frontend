@@ -5,6 +5,12 @@
 :root {
   --background: #1a0a2e;
   --foreground: #ffffff;
+  --card: #1c0f3b;
+  --border: rgba(255, 255, 255, 0.1);
+  --muted-foreground: #c3bde2;
+  --primary: #7b3ff2;
+  --secondary: #5d3fe5;
+  --accent: #c084fc;
 }
 
 body {

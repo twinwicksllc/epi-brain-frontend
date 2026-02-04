@@ -392,11 +392,11 @@ export default function Home() {
             <div className="flex flex-col items-center justify-center gap-1 mt-4">
               <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
                 <span>By messaging EPI Brain, you agree to our</span>
-                <a href="/terms" className="underline hover:text-gray-900">
+                <a href="/legal#tos" className="underline hover:text-gray-900">
                   Terms
                 </a>
                 <span>and have read our</span>
-                <a href="/privacy" className="underline hover:text-gray-900">
+                <a href="/legal#privacy" className="underline hover:text-gray-900">
                   Privacy Policy
                 </a>
               </div>
