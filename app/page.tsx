@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import NeuronParticles from '@/components/NeuronParticles';
+import VaultView from '@/components/VaultView';
 import { Paperclip, Search, BookOpen, Mic } from 'lucide-react';
 import { apiRequest } from '@/lib/api';
 
@@ -14,6 +15,9 @@ export default function Home() {
   const [isSending, setIsSending] = useState(false);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isDiscoveryMode, setIsDiscoveryMode] = useState(false);
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -72,37 +76,71 @@ export default function Home() {
   };
 
   const handleAttach = () => {
-    console.log('Attach clicked');
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    console.log('Preparing file upload:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+    });
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('mode', 'default');
+    if (inputValue.trim()) {
+      formData.append('message', inputValue.trim());
+    }
+
+    console.log('Multipart form ready for POST /chat/message (send when ready):', formData);
+    event.target.value = '';
+    showToast('File ready for upload. Submit the conversation to send it.', 'success');
+  };
+
+  const handleDiscoveryToggle = () => {
+    setIsDiscoveryMode((prev) => {
+      const next = !prev;
+      showToast(next ? 'Discovery mode enabled' : 'Discovery mode disabled', 'success');
+      return next;
+    });
   };
 
   const handleSearch = () => {
-    handleSendMessage();
+    handleDiscoveryToggle();
   };
 
   const handleStudy = () => {
-    console.log('Study clicked');
+    setIsVaultOpen(true);
   };
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
     setIsSending(true);
 
+    const endpoint = isDiscoveryMode ? '/chat/search' : '/chat/message';
+    const payload: Record<string, string> = {
+      mode: isDiscoveryMode ? 'discovery' : 'default',
+      message: inputValue.trim(),
+    };
+
     try {
       const response = await apiRequest<{
         conversation_id?: string;
         conversationId?: string;
-      }>('/chat/message', {
+      }>(endpoint, {
         method: 'POST',
-        body: JSON.stringify({
-          mode: 'default',
-          message: inputValue.trim(),
-        }),
+        body: JSON.stringify(payload),
       });
       const conversationId = response.conversation_id || response.conversationId;
       if (conversationId) {
         localStorage.setItem('conversation_id', conversationId);
       }
-      showToast('Message sent.', 'success');
+      showToast(isDiscoveryMode ? 'Discovery search sent.' : 'Message sent.', 'success');
       setInputValue('');
     } catch (error: any) {
       showToast(error?.message || 'Failed to send message.', 'error');
@@ -131,36 +169,38 @@ export default function Home() {
       <main className="relative z-10">
         {/* Header */}
         <header className="container mx-auto px-6 py-4 flex justify-end items-center">
-            <nav aria-label="Main navigation" className="flex items-center gap-3">
-              {isLoggedIn ? (
-                <Link
-                  href="/dashboard"
-                  className="px-6 py-2.5 text-white text-sm font-medium hover:text-purple-300 transition-colors"
-                  aria-label="Go to dashboard"
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <button
-                  onClick={handleSignIn}
-                  className="px-6 py-2.5 text-white text-sm font-medium hover:text-purple-300 transition-colors"
-                  aria-label="Log in to your account"
-                >
-                  Log in
-                </button>
-              )}
-              <button
-                onClick={handleSignUp}
-                className="px-6 py-2.5 bg-white text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors"
-                aria-label="Sign up for free"
+          <nav aria-label="Main navigation" className="flex items-center gap-3">
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="px-6 py-2.5 text-white text-sm font-medium hover:text-purple-300 transition-colors"
+                aria-label="Go to dashboard"
               >
-                Sign up for free
+                Dashboard
+              </Link>
+            ) : (
+              <button
+                onClick={handleSignIn}
+                className="px-6 py-2.5 text-white text-sm font-medium hover:text-purple-300 transition-colors"
+                aria-label="Log in to your account"
+              >
+                Log in
               </button>
-            </nav>
+            )}
+            <button
+              onClick={handleSignUp}
+              className="px-6 py-2.5 bg-white text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Sign up for free"
+            >
+              Sign up for free
+            </button>
+          </nav>
         </header>
 
-        {/* Hero Section */}
-        <section className="container mx-auto px-6 py-8 text-center flex flex-col items-center justify-center min-h-[calc(100vh-90px)]" aria-labelledby="hero-heading">
+        <section
+          className="container mx-auto px-6 py-8 text-center flex flex-col items-center justify-center min-h-[calc(100vh-90px)]"
+          aria-labelledby="hero-heading"
+        >
           <div className="mb-4">
             <img
               src="/assets/brain-logo-landing.png"
@@ -170,16 +210,15 @@ export default function Home() {
               height="210"
             />
           </div>
-          
+
           <h1 id="hero-heading" className="text-5xl md:text-6xl font-bold text-white mb-4">
             EPI Brain
           </h1>
-          
+
           <p className="text-xl md:text-2xl text-gray-300 mb-16">
             <span className="font-semibold">Voice + Emotional Intelligence.</span> Ask anything.
           </p>
 
-          {/* Search Input Box */}
           <div className="w-full max-w-[52rem] bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl px-5 py-5">
             <div className="flex items-center gap-3 mb-3">
               <input
@@ -206,7 +245,6 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex items-center gap-4 pt-3 border-t border-gray-200">
               <button
                 onClick={handleAttach}
@@ -218,11 +256,18 @@ export default function Home() {
               </button>
               <button
                 onClick={handleSearch}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-white hover:bg-purple-600 rounded-lg transition-colors"
-                aria-label="Search"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  isDiscoveryMode
+                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                    : 'text-gray-600 hover:text-white hover:bg-purple-600'
+                }`}
+                aria-pressed={isDiscoveryMode}
+                aria-label="Toggle Discovery Mode"
               >
                 <Search className="w-4 h-4" />
-                <span className="text-sm font-medium">Search</span>
+                <span className="text-sm font-medium">
+                  {isDiscoveryMode ? 'Discovery On' : 'Discovery Mode'}
+                </span>
               </button>
               <button
                 onClick={handleStudy}
@@ -234,13 +279,18 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Terms and Privacy */}
+            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileSelected} />
+
             <div className="flex flex-col items-center justify-center gap-1 mt-4">
               <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
                 <span>By messaging EPI Brain, you agree to our</span>
-                <a href="/terms" className="underline hover:text-gray-900">Terms</a>
+                <a href="/terms" className="underline hover:text-gray-900">
+                  Terms
+                </a>
                 <span>and have read our</span>
-                <a href="/privacy" className="underline hover:text-gray-900">Privacy Policy</a>
+                <a href="/privacy" className="underline hover:text-gray-900">
+                  Privacy Policy
+                </a>
               </div>
               <div className="text-xs text-gray-600">
                 <a href="/use-cases" className="underline hover:text-gray-900">
@@ -250,6 +300,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <VaultView isOpen={isVaultOpen} onClose={() => setIsVaultOpen(false)} />
       </main>
     </div>
   );
