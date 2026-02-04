@@ -2,9 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    turbopack: {
-      root: '..',
-    },
+    // Remove the turbopack block from here
   },
   // Keep any other existing settings below this line
 };

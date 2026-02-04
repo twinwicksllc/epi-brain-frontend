@@ -5,7 +5,6 @@ import { MessageSquare, Brain, TrendingUp } from 'lucide-react';
 import FAQSection from '@/components/FAQSection';
 import WhyChooseEPI from '@/components/WhyChooseEPI';
 import Link from 'next/link';
-import Image from 'next/image';
 
 const coreFeatures = [
   {
@@ -15,65 +14,14 @@ const coreFeatures = [
   },
   {
     icon: Brain,
-    title: "9 Unique Personalities",
-    description: "Switch between specialized AI modes tailored to your needs"
+    title: "Adaptive AI Support",
+    description: "Get tailored assistance that matches your context and goals"
   },
   {
     icon: TrendingUp,
     title: "Track Your Progress",
     description: "Monitor your growth and achievements across all interactions"
   }
-];
-
-const modes = [
-  {
-    id: 'personal_friend',
-    name: 'Personal Friend',
-    image: '/personalities/personal_companion.jpeg',
-    description: 'Your 24/7 companion for emotional support and daily check-ins',
-  },
-  {
-    id: 'sales_agent',
-    name: 'Sales Agent',
-    image: '/personalities/sales_trainer.jpeg',
-    description: 'Master NEBP methodology and practice sales scenarios',
-  },
-  {
-    id: 'student_tutor',
-    name: 'Student/Tutor',
-    image: '/personalities/student_tutor.jpeg',
-    description: 'Personalized learning with performance tracking and grading',
-  },
-  {
-    id: 'kids_learning',
-    name: 'Kids Learning',
-    image: '/personalities/kids_companion.jpeg',
-    description: 'Fun, interactive learning for young minds',
-  },
-  {
-    id: 'customer_service',
-    name: 'Customer Service',
-    image: '/personalities/customer_service.jpeg',
-    description: 'Practice difficult scenarios and de-escalation techniques',
-  },
-  {
-    id: 'psychology_expert',
-    name: 'Psychology Expert',
-    image: '/personalities/psychology_expert.jpeg',
-    description: 'Emotional intelligence and stress management support',
-  },
-  {
-    id: 'business_mentor',
-    name: 'Business Mentor',
-    image: '/personalities/business_mentor.jpeg',
-    description: 'Strategic guidance for business growth and success',
-  },
-  {
-    id: 'weight_loss_coach',
-    name: 'Weight Loss Coach',
-    image: '/personalities/weight_coach.jpeg',
-    description: 'Personalized fitness and nutrition guidance',
-  },
 ];
 
 export default function UseCasesPage() {
@@ -107,53 +55,8 @@ export default function UseCasesPage() {
             EPI Brain Use Cases & Features
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Discover how EPI Brain's 9 AI personalities can transform every aspect of your life
+            Discover how EPI Brain adapts to elevate your daily work, learning, and personal goals
           </p>
-        </section>
-
-        {/* Modes Grid */}
-        <section className="container mx-auto px-6 py-12" aria-labelledby="modes-heading">
-          <h2 id="modes-heading" className="text-3xl font-bold text-white text-center mb-12">
-            Choose Your AI Personality
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            {modes.map((mode) => (
-              <article
-                key={mode.id}
-                className="relative overflow-hidden rounded-xl border border-[#7B3FF2]/20 hover:border-[#7B3FF2] transition-all hover:shadow-lg hover:shadow-[#7B3FF2]/30 cursor-pointer group aspect-[3/4]"
-              >
-                {/* Background Image */}
-                <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-105">
-                  <Image
-                    src={mode.image}
-                    alt={`${mode.name} AI Personality`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    priority
-                  />
-                </div>
-
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1a102e] via-[#1a102e]/60 to-transparent" />
-
-                {/* Content */}
-                <div className="relative h-full flex flex-col justify-end items-center text-center p-6">
-                  <h3 className="text-2xl font-semibold text-white mb-2">
-                    {mode.name}
-                  </h3>
-                  <p className="text-gray-300 text-sm">
-                    {mode.description}
-                  </p>
-                </div>
-
-                {/* Hover Glow Effect */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#7B3FF2]/20 to-transparent" />
-                </div>
-              </article>
-            ))}
-          </div>
         </section>
 
         {/* Core Features Overview */}
@@ -190,7 +93,7 @@ export default function UseCasesPage() {
               Ready to Get Started?
             </h2>
             <p className="text-xl text-gray-300 mb-8">
-              Experience the power of 9 specialized AI personalities designed for your success
+              Experience guided AI support designed around your goals
             </p>
             <Link
               href="/register"
