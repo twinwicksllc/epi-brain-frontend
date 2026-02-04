@@ -38,7 +38,7 @@ export default function LegalPage() {
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
-            <Brain className="h-6 w-6 text-primary" />
+            <img src="/assets/brain-logo-landing.png" alt="EPI Brain" className="h-10 w-10 object-contain" />
             <span className="text-xl font-semibold text-foreground">EPI Brain</span>
           </div>
           <nav className="flex gap-4 text-sm">
