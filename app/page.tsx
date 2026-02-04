@@ -128,12 +128,19 @@ export default function Home() {
             </div>
 
             {/* Terms and Privacy */}
-            <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-600">
-              <span>By messaging EPI Brain, you agree to our</span>
-              <a href="/terms" className="underline hover:text-gray-900">Terms</a>
-              <span>and have read our</span>
-              <a href="/privacy" className="underline hover:text-gray-900">Privacy Policy</a>
-              <Heart className="w-3 h-3 ml-1" />
+            <div className="flex flex-col items-center justify-center gap-1 mt-4">
+              <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
+                <span>By messaging EPI Brain, you agree to our</span>
+                <a href="/terms" className="underline hover:text-gray-900">Terms</a>
+                <span>and have read our</span>
+                <a href="/privacy" className="underline hover:text-gray-900">Privacy Policy</a>
+                <Heart className="w-3 h-3 ml-1" />
+              </div>
+              <div className="text-xs text-gray-600">
+                <a href="/use-cases" className="underline hover:text-gray-900">
+                  Learn more about EPI Brain HERE!
+                </a>
+              </div>
             </div>
           </div>
         </section>
