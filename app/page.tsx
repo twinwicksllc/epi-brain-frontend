@@ -7,6 +7,7 @@ import NeuronParticles from '@/components/NeuronParticles';
 import VaultView from '@/components/VaultView';
 import { Paperclip, Search, BookOpen, Mic } from 'lucide-react';
 import { apiRequest } from '@/lib/api';
+import { PanelLeft } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -17,6 +18,10 @@ export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isDiscoveryMode, setIsDiscoveryMode] = useState(false);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [recentChats, setRecentChats] = useState<Array<{ id: string; title?: string }>>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [conversationMessages, setConversationMessages] = useState<Array<{ id?: string; role?: string; content?: string }>>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -32,6 +37,12 @@ export default function Home() {
         await apiRequest('/users/me', { method: 'GET' });
         if (active) {
           setIsLoggedIn(true);
+          fetchRecentChats();
+          const storedConversationId = localStorage.getItem('conversation_id');
+          if (storedConversationId) {
+            setCurrentConversationId(storedConversationId);
+            fetchConversation(storedConversationId);
+          }
         }
       } catch (error) {
         if (active) {
@@ -127,11 +138,15 @@ export default function Home() {
       mode: isDiscoveryMode ? 'discovery' : 'default',
       message: inputValue.trim(),
     };
+    if (currentConversationId) {
+      payload.conversation_id = currentConversationId;
+    }
 
     try {
       const response = await apiRequest<{
         conversation_id?: string;
         conversationId?: string;
+        messages?: Array<{ id?: string; role?: string; content?: string }>;
       }>(endpoint, {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -139,9 +154,14 @@ export default function Home() {
       const conversationId = response.conversation_id || response.conversationId;
       if (conversationId) {
         localStorage.setItem('conversation_id', conversationId);
+        setCurrentConversationId(conversationId);
+      }
+      if (response.messages) {
+        setConversationMessages(response.messages);
       }
       showToast(isDiscoveryMode ? 'Discovery search sent.' : 'Message sent.', 'success');
       setInputValue('');
+      fetchRecentChats();
     } catch (error: any) {
       showToast(error?.message || 'Failed to send message.', 'error');
     } finally {
@@ -149,9 +169,72 @@ export default function Home() {
     }
   };
 
+  const fetchRecentChats = async () => {
+    try {
+      const data = await apiRequest<Array<{ id: string; title?: string }>>('/chat/conversations', {
+        method: 'GET',
+      });
+      setRecentChats(data.slice(0, 5));
+    } catch (error) {
+      console.error('Failed to load recent chats', error);
+    }
+  };
+
+  const fetchConversation = async (conversationId: string) => {
+    try {
+      const data = await apiRequest<{ messages?: Array<{ id?: string; role?: string; content?: string }> }>(
+        `/chat/conversations/${conversationId}`,
+        { method: 'GET' }
+      );
+      if (data.messages) {
+        setConversationMessages(data.messages);
+      } else {
+        setConversationMessages([]);
+      }
+    } catch (error) {
+      console.error('Failed to load conversation', error);
+      setConversationMessages([]);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a0a2e] to-[#2d1b4e] relative overflow-hidden">
       <NeuronParticles />
+      {isSidebarOpen && (
+        <aside className="fixed left-0 top-0 h-full w-64 bg-[#120a24]/95 border-r border-white/10 z-30 backdrop-blur-xl shadow-xl">
+          <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <span className="text-white text-sm font-semibold">Recent Chats</span>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="text-white/70 hover:text-white text-xs"
+              aria-label="Close recent chats"
+            >
+              Close
+            </button>
+          </div>
+          <div className="p-3 space-y-2 overflow-y-auto h-[calc(100%-56px)]">
+            {recentChats.length === 0 && (
+              <div className="text-white/60 text-sm">No recent chats.</div>
+            )}
+            {recentChats.map((chat) => (
+              <button
+                key={chat.id}
+                onClick={() => {
+                  setCurrentConversationId(chat.id);
+                  localStorage.setItem('conversation_id', chat.id);
+                  fetchConversation(chat.id);
+                  setIsSidebarOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2 rounded-lg border border-white/5 hover:border-[#7B3FF2]/60 hover:bg-white/5 transition-colors text-sm text-white truncate ${
+                  currentConversationId === chat.id ? 'border-[#7B3FF2]/80 bg-[#7B3FF2]/10' : ''
+                }`}
+              >
+                {chat.title || 'Untitled conversation'}
+              </button>
+            ))}
+          </div>
+        </aside>
+      )}
       {toast && (
         <div
           className={`fixed top-4 right-4 z-50 max-w-md rounded-lg border px-4 py-3 shadow-lg backdrop-blur-md transition-all ${
@@ -201,17 +284,24 @@ export default function Home() {
           className="container mx-auto px-6 py-8 text-center flex flex-col items-center justify-center min-h-[calc(100vh-90px)]"
           aria-labelledby="hero-heading"
         >
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-center gap-3">
+            <button
+              onClick={() => setIsSidebarOpen((prev) => !prev)}
+              aria-label="Toggle recent chats"
+              className="p-2 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 transition-colors"
+            >
+              <PanelLeft className="w-5 h-5 text-white" />
+            </button>
             <img
               src="/assets/brain-logo-landing.png"
               alt="EPI Brain Logo"
-              className="mx-auto w-[210px] h-[210px] object-contain"
+              className="w-[210px] h-[210px] object-contain"
               width="210"
               height="210"
             />
           </div>
 
-          <h1 id="hero-heading" className="text-5xl md:text-6xl font-bold text-white mb-4">
+          <h1 id="hero-heading" className="text-5xl md:text-6xl font-bold text-white mb-4 flex items-center justify-center gap-2">
             EPI Brain
           </h1>
 
@@ -278,6 +368,23 @@ export default function Home() {
                 <span className="text-sm font-medium">Study</span>
               </button>
             </div>
+
+            {conversationMessages.length > 0 && (
+              <div className="mt-4 text-left max-h-64 overflow-y-auto border border-gray-200/70 rounded-lg p-3 bg-white/60">
+                <div className="text-xs uppercase tracking-wide text-gray-500 mb-2">Conversation</div>
+                <div className="space-y-2">
+                  {conversationMessages.map((msg, idx) => (
+                    <div
+                      key={msg.id || idx}
+                      className={`p-2 rounded-lg text-sm ${msg.role === 'assistant' ? 'bg-purple-50 text-gray-900' : 'bg-gray-100 text-gray-800'}`}
+                    >
+                      <span className="font-semibold mr-2 text-xs uppercase text-gray-500">{msg.role || 'user'}</span>
+                      <span className="whitespace-pre-wrap break-words">{msg.content}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileSelected} />
 
