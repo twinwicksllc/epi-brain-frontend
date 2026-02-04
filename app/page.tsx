@@ -10,15 +10,11 @@ import SiloedDiscoveryChat from '@/components/SiloedDiscoveryChat';
 export default function Home() {
   const router = useRouter();
 
-  console.log('Home component rendering');
-
   const handleSignIn = () => {
-    console.log('Sign in button clicked, navigating to /login');
     router.push('/login');
   };
 
   const handleGetStarted = () => {
-    console.log('Get started button clicked, navigating to /register');
     router.push('/register');
   };
 
