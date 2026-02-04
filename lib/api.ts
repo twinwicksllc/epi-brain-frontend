@@ -14,6 +14,19 @@ export async function apiRequest<T>(
   path: string,
   options: RequestInit & { parseAsText?: boolean } = {}
 ): Promise<T> {
+  const versionSegment = `/api/${API_VERSION}`;
+  const absoluteUrlPattern = /^https?:\/\//i;
+  const isAbsoluteUrl = absoluteUrlPattern.test(path);
+  let normalizedPath = path;
+
+  if (!isAbsoluteUrl) {
+    normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    if (API_BASE.endsWith(versionSegment) && normalizedPath.startsWith(versionSegment)) {
+      const trimmed = normalizedPath.slice(versionSegment.length);
+      normalizedPath = trimmed ? (trimmed.startsWith('/') ? trimmed : `/${trimmed}`) : '/';
+    }
+  }
+
   const headers = new Headers(options.headers);
   if (!headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
@@ -26,7 +39,8 @@ export async function apiRequest<T>(
     }
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const requestUrl = isAbsoluteUrl ? normalizedPath : `${API_BASE}${normalizedPath}`;
+  const response = await fetch(requestUrl, {
     ...options,
     headers,
   });

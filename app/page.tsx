@@ -134,9 +134,10 @@ export default function Home() {
     setIsSending(true);
 
     const endpoint = isDiscoveryMode ? '/chat/search' : '/chat/message';
-    const payload: Record<string, string> = {
+    const payload: Record<string, string | boolean> = {
       mode: isDiscoveryMode ? 'discovery' : 'default',
       message: inputValue.trim(),
+      is_homepage_session: true,
     };
     if (currentConversationId) {
       payload.conversation_id = currentConversationId;
