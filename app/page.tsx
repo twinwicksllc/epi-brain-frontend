@@ -103,7 +103,7 @@ export default function Home() {
             <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
               <button
                 onClick={handleAttach}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-white hover:bg-purple-600 rounded-lg transition-colors"
                 aria-label="Attach files"
               >
                 <Paperclip className="w-4 h-4" />
@@ -111,7 +111,7 @@ export default function Home() {
               </button>
               <button
                 onClick={handleSearch}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-white hover:bg-purple-600 rounded-lg transition-colors"
                 aria-label="Search"
               >
                 <Search className="w-4 h-4" />
@@ -119,7 +119,7 @@ export default function Home() {
               </button>
               <button
                 onClick={handleStudy}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-white hover:bg-purple-600 rounded-lg transition-colors"
                 aria-label="Study mode"
               >
                 <BookOpen className="w-4 h-4" />
