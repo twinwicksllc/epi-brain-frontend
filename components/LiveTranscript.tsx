@@ -30,13 +30,13 @@ export default function LiveTranscript({ transcript, isListening }: LiveTranscri
       `}
     >
       <div 
-        className="
+        className={`
           relative mb-3 p-4 rounded-2xl
           backdrop-blur-md
           border border-white/10
           shadow-xl
           overflow-hidden
-        "
+        `}
         style={{
           background: 'linear-gradient(135deg, rgba(123, 63, 242, 0.2) 0%, rgba(107, 70, 193, 0.2) 100%)',
         }}
