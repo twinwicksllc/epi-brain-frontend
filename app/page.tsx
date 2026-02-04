@@ -102,7 +102,7 @@ export default function Home() {
       
       <main className="relative z-10">
         {/* Header */}
-        <header className="container mx-auto px-6 py-6 flex justify-end items-center">
+        <header className="container mx-auto px-6 py-4 flex justify-end items-center">
           <nav aria-label="Main navigation" className="flex items-center gap-3">
             <button
               onClick={handleSignIn}
@@ -122,7 +122,7 @@ export default function Home() {
         </header>
 
         {/* Hero Section */}
-        <section className="container mx-auto px-6 py-12 text-center flex flex-col items-center justify-center min-h-[calc(100vh-120px)]" aria-labelledby="hero-heading">
+        <section className="container mx-auto px-6 py-8 text-center flex flex-col items-center justify-center min-h-[calc(100vh-90px)]" aria-labelledby="hero-heading">
           <div className="mb-4">
             <img
               src="/assets/brain-logo-landing.png"
@@ -142,8 +142,8 @@ export default function Home() {
           </p>
 
           {/* Search Input Box */}
-          <div className="w-full max-w-2xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6">
-            <div className="flex items-center gap-3 mb-4">
+          <div className="w-full max-w-2xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl px-5 py-5">
+            <div className="flex items-center gap-3 mb-3">
               <input
                 type="text"
                 value={inputValue}
@@ -169,7 +169,7 @@ export default function Home() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center gap-4 pt-3 border-t border-gray-200">
               <button
                 onClick={handleAttach}
                 className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-white hover:bg-purple-600 rounded-lg transition-colors"
