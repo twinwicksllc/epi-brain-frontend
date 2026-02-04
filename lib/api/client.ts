@@ -175,3 +175,44 @@ export const userApi = {
     return response.data;
   },
 };
+
+// Assistant Tools API
+export const assistantToolsApi = {
+  createNote: async (data: { title?: string; content: string; type?: string }) => {
+    const response = await apiClient.post('/assistant-tools/notes', data);
+    return response.data;
+  },
+
+  getNotes: async () => {
+    const response = await apiClient.get('/assistant-tools/notes');
+    return response.data;
+  },
+
+  getNote: async (noteId: string) => {
+    const response = await apiClient.get(`/assistant-tools/notes/${noteId}`);
+    return response.data;
+  },
+
+  deleteNote: async (noteId: string) => {
+    const response = await apiClient.delete(`/assistant-tools/notes/${noteId}`);
+    return response.data;
+  },
+
+  sendInternalMessage: async (data: { message: string; priority?: string }) => {
+    const response = await apiClient.post('/assistant-tools/internal-message', data);
+    return response.data;
+  },
+};
+
+// Admin API
+export const adminApi = {
+  getUsageStats: async () => {
+    const response = await apiClient.get('/admin/usage');
+    return response.data;
+  },
+
+  getUserUsage: async (userId: string) => {
+    const response = await apiClient.get(`/admin/usage/${userId}`);
+    return response.data;
+  },
+};

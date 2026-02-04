@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, LogOut, User, Settings } from "lucide-react";
+import { Menu, X, LogOut, User, Settings, Archive } from "lucide-react";
 import ModeSelector from "./ModeSelector";
 import VoiceToggle from "./VoiceToggle";
 import SettingsModal from "./SettingsModal";
@@ -22,6 +22,7 @@ interface HeaderProps {
   siloName?: string;
   currentPhase?: "discovery" | "strategy" | "action" | null;
   clarityMetrics?: ClarityMetrics | null;
+  onVaultClick?: () => void;
 }
 
 export default function Header({
@@ -37,6 +38,7 @@ export default function Header({
   isVoiceAvailable,
   siloName = "EPI Brain",
   currentPhase,
+  onVaultClick,
   clarityMetrics,
 }: HeaderProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -92,7 +94,21 @@ export default function Header({
             </div>
           </div>
 
-          {/* Right side - Voice toggle + User menu */}
+          {/* Rigault Button */}
+            {onVaultClick && (
+              <button
+                onClick={onVaultClick}
+                className="p-2 rounded-lg hover:bg-[#7B3FF2]/20 transition-colors group relative"
+                title="Open Vault"
+              >
+                <Archive className="w-5 h-5 text-white group-hover:text-[#A78BFA]" />
+                <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/90 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  🔐 Vault
+                </span>
+              </button>
+            )}
+
+            {/* Vht side - Voice toggle + User menu */}
           <div className="flex items-center space-x-4">
             {/* Voice Toggle */}
             {isVoiceAvailable && (

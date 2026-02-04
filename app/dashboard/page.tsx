@@ -9,7 +9,11 @@ import ChatInput from "@/components/ChatInput";
 import MessageBubble from "@/components/MessageBubble";
 import VoiceToggle from "@/components/VoiceToggle";
 import VoiceErrorToast from "@/components/VoiceErrorToast";
-import { authApi, chatApi, modesApi, userApi } from "@/lib/api/client";
+import PushToTalk from "@/components/PushToTalk";
+import LiveTranscript from "@/components/LiveTranscript";
+import FloatingActionButton from "@/components/FloatingActionButton";
+import VaultView from "@/components/VaultView";
+import { authApi, chatApi, modesApi, userApi, assistantToolsApi } from "@/lib/api/client";
 import { VoiceManager } from "@/lib/voice/VoiceManager";
 import { Message, Conversation, ClarityMetrics } from "@/types";
 
@@ -36,6 +40,9 @@ export default function Dashboard() {
   const [currentPhase, setCurrentPhase] = useState<"discovery" | "strategy" | "action" | null>(null);
   const [clarityMetrics, setClarityMetrics] = useState<ClarityMetrics | null>(null);
   const [capturedIntentUsed, setCapturedIntentUsed] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState<string>("");
+  const [isListening, setIsListening] = useState(false);
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
 
   // Calculate background gradient based on depth
   const getDepthGradient = (depth: number) => {
@@ -452,6 +459,50 @@ export default function Dashboard() {
     }
   };
 
+  const handleTranscriptChange = (transcript: string) => {
+    setLiveTranscript(transcript);
+    setIsListening(true);
+  };
+
+  const handleTranscriptComplete = async (transcript: string) => {
+    setIsListening(false);
+    if (transcript.trim()) {
+      await handleSendMessage(transcript);
+      setLiveTranscript("");
+    }
+  };
+
+  const handleNewNote = async () => {
+    try {
+      const response = await assistantToolsApi.createNote({
+        content: "Quick note created from dashboard",
+        type: "quick",
+      });
+      console.log("Note created:", response);
+      // Show success feedback (could add a toast here)
+    } catch (error) {
+      console.error("Error creating note:", error);
+    }
+  };
+
+  const handleSalesMode = () => {
+    setCurrentMode("sales_objection_practice");
+    localStorage.setItem("active_lens", "sales");
+  };
+
+  const handleMessageAdmin = async () => {
+    try {
+      const response = await assistantToolsApi.sendInternalMessage({
+        message: "User needs assistance",
+        priority: "normal",
+      });
+      console.log("Message sent to admin:", response);
+      // Show success feedback
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#1a0a2e] to-[#2d1b4e] flex items-center justify-center">
@@ -501,6 +552,7 @@ export default function Dashboard() {
           siloName={siloName}
           currentPhase={currentPhase}
           clarityMetrics={clarityMetrics}
+          onVaultClick={() => setIsVaultOpen(true)}
         />
 
         {/* Messages Area */}
@@ -528,6 +580,9 @@ export default function Dashboard() {
         {/* Input Area */}
         <div className="p-4 md:p-6 border-t border-[#7B3FF2]/20">
           <div className="max-w-4xl mx-auto">
+            {/* Live Transcript */}
+            <LiveTranscript transcript={liveTranscript} isListening={isListening} />
+            
             <ChatInput
               onSendMessage={handleSendMessage}
               disabled={!currentMode}
@@ -544,6 +599,24 @@ export default function Dashboard() {
         />
       )}
     </div>
+
+    {/* Push-to-Talk */}
+    <PushToTalk
+      isVoiceEnabled={isVoiceEnabled}
+      onTranscriptChange={handleTranscriptChange}
+      onTranscriptComplete={handleTranscriptComplete}
+      voiceManager={voiceManagerRef.current}
+    />
+
+    {/* Floating Action Button (Mobile Only) */}
+    <FloatingActionButton
+      onNewNote={handleNewNote}
+      onSalesMode={handleSalesMode}
+      onMessageAdmin={handleMessageAdmin}
+    />
+
+    {/* Vault View */}
+    <VaultView isOpen={isVaultOpen} onClose={() => setIsVaultOpen(false)} />
     </>
   );
 }
