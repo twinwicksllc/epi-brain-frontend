@@ -1,25 +1,37 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import NeuronParticles from '@/components/NeuronParticles';
-import SiloedDiscoveryChat from '@/components/SiloedDiscoveryChat';
-
-// Force cache invalidation - deployed 2025-01-12
+import { Paperclip, Search, BookOpen, Mic, Heart } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
-
-  console.log('Home component rendering');
+  const [inputValue, setInputValue] = useState('');
 
   const handleSignIn = () => {
-    console.log('Sign in button clicked, navigating to /login');
     router.push('/login');
   };
 
-  const handleGetStarted = () => {
-    console.log('Get started button clicked, navigating to /register');
+  const handleSignUp = () => {
     router.push('/register');
+  };
+
+  const handleVoice = () => {
+    // Handle voice input
+    console.log('Voice button clicked');
+  };
+
+  const handleAttach = () => {
+    console.log('Attach clicked');
+  };
+
+  const handleSearch = () => {
+    console.log('Search clicked');
+  };
+
+  const handleStudy = () => {
+    console.log('Study clicked');
   };
 
   return (
@@ -30,72 +42,101 @@ export default function Home() {
         {/* Header */}
         <header className="container mx-auto px-6 py-6 flex justify-end items-center">
           <nav aria-label="Main navigation" className="flex items-center gap-3">
-            <a
-              href="/use-cases"
-              className="px-6 py-2 bg-transparent border border-[#7B3FF2] text-white rounded-lg hover:bg-[#7B3FF2] transition-colors"
-              aria-label="View EPI Brain use cases"
-            >
-              More Information
-            </a>
-            <button
-              onClick={handleGetStarted}
-              className="px-6 py-2 bg-transparent border border-[#7B3FF2] text-white rounded-lg hover:bg-[#7B3FF2] transition-colors"
-              aria-label="Register for free"
-            >
-              Register for Free
-            </button>
             <button
               onClick={handleSignIn}
-              className="px-6 py-2 bg-transparent border border-[#7B3FF2] text-white rounded-lg hover:bg-[#7B3FF2] transition-colors"
-              aria-label="Sign in to your account"
+              className="px-6 py-2.5 text-white text-sm font-medium hover:text-purple-300 transition-colors"
+              aria-label="Log in to your account"
             >
-              Sign In
+              Log in
+            </button>
+            <button
+              onClick={handleSignUp}
+              className="px-6 py-2.5 bg-white text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Sign up for free"
+            >
+              Sign up for free
             </button>
           </nav>
         </header>
 
-        {/* Hero Section with Discovery Chat */}
-        <section className="container mx-auto px-6 py-4 text-center" aria-labelledby="hero-heading">
-          <div className="mb-4">
+        {/* Hero Section */}
+        <section className="container mx-auto px-6 py-12 text-center flex flex-col items-center justify-center min-h-[calc(100vh-120px)]" aria-labelledby="hero-heading">
+          <div className="mb-8">
             <img
               src="/assets/brain-logo-landing.png"
-              alt="EPI Brain Logo - AI Life Companion"
-              className="mx-auto w-[120px] h-[120px] md:w-[180px] md:h-[180px] object-contain"
-              width="180"
-              height="180"
+              alt="EPI Brain Logo"
+              className="mx-auto w-[140px] h-[140px] object-contain"
+              width="140"
+              height="140"
             />
           </div>
-          <h1 id="hero-heading" className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2">
+          
+          <h1 id="hero-heading" className="text-5xl md:text-6xl font-bold text-white mb-4">
             EPI Brain
           </h1>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
-            Your AI-Powered
-            <span className="block bg-gradient-to-r from-[#7B3FF2] to-[#A78BFA] bg-clip-text text-transparent">
-              Life Companion
-            </span>
-          </h2>
-          <p className="text-base md:text-lg text-gray-300 mb-6 max-w-2xl mx-auto">
-            Experience the future of AI conversation. Try it now—no signup required.
+          
+          <p className="text-xl md:text-2xl text-gray-300 mb-16">
+            <span className="font-semibold">Voice + Emotional Intelligence.</span> Ask anything.
           </p>
 
-          {/* Embedded Discovery Chat */}
-          <div className="mb-6">
-            <SiloedDiscoveryChat />
-          </div>
-
-          <div className="text-xs md:text-sm text-gray-400 max-w-2xl mx-auto">
-            <p>
-              Already have an account?{' '}
+          {/* Search Input Box */}
+          <div className="w-full max-w-2xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Ask anything"
+                className="flex-1 px-4 py-3 text-gray-900 text-lg bg-transparent border-none outline-none placeholder:text-gray-500"
+              />
               <button
-                onClick={handleSignIn}
-                className="text-[#7B3FF2] hover:text-[#A78BFA] underline"
+                onClick={handleVoice}
+                className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+                aria-label="Use voice input"
               >
-                Sign in here
+                <Mic className="w-5 h-5" />
+                <span>Voice</span>
               </button>
-            </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleAttach}
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Attach files"
+              >
+                <Paperclip className="w-4 h-4" />
+                <span className="text-sm font-medium">Attach</span>
+              </button>
+              <button
+                onClick={handleSearch}
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Search"
+              >
+                <Search className="w-4 h-4" />
+                <span className="text-sm font-medium">Search</span>
+              </button>
+              <button
+                onClick={handleStudy}
+                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Study mode"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span className="text-sm font-medium">Study</span>
+              </button>
+            </div>
+
+            {/* Terms and Privacy */}
+            <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-600">
+              <span>By messaging EPI Brain, you agree to our</span>
+              <a href="/terms" className="underline hover:text-gray-900">Terms</a>
+              <span>and have read our</span>
+              <a href="/privacy" className="underline hover:text-gray-900">Privacy Policy</a>
+              <Heart className="w-3 h-3 ml-1" />
+            </div>
           </div>
         </section>
-
       </main>
     </div>
   );
