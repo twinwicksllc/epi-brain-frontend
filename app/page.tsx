@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import NeuronParticles from '@/components/NeuronParticles';
@@ -12,6 +13,7 @@ export default function Home() {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -19,7 +21,26 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // No health check needed - API errors will be handled in individual requests
+    let active = true;
+
+    const verifyLogin = async () => {
+      try {
+        await apiRequest('/users/me', { method: 'GET' });
+        if (active) {
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        if (active) {
+          setIsLoggedIn(false);
+        }
+      }
+    };
+
+    verifyLogin();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleSignIn = () => {
@@ -67,13 +88,20 @@ export default function Home() {
     setIsSending(true);
 
     try {
-      await apiRequest('/chat/message', {
+      const response = await apiRequest<{
+        conversation_id?: string;
+        conversationId?: string;
+      }>('/chat/message', {
         method: 'POST',
         body: JSON.stringify({
           mode: 'default',
           message: inputValue.trim(),
         }),
       });
+      const conversationId = response.conversation_id || response.conversationId;
+      if (conversationId) {
+        localStorage.setItem('conversation_id', conversationId);
+      }
       showToast('Message sent.', 'success');
       setInputValue('');
     } catch (error: any) {
@@ -103,22 +131,32 @@ export default function Home() {
       <main className="relative z-10">
         {/* Header */}
         <header className="container mx-auto px-6 py-4 flex justify-end items-center">
-          <nav aria-label="Main navigation" className="flex items-center gap-3">
-            <button
-              onClick={handleSignIn}
-              className="px-6 py-2.5 text-white text-sm font-medium hover:text-purple-300 transition-colors"
-              aria-label="Log in to your account"
-            >
-              Log in
-            </button>
-            <button
-              onClick={handleSignUp}
-              className="px-6 py-2.5 bg-white text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="Sign up for free"
-            >
-              Sign up for free
-            </button>
-          </nav>
+            <nav aria-label="Main navigation" className="flex items-center gap-3">
+              {isLoggedIn ? (
+                <Link
+                  href="/dashboard"
+                  className="px-6 py-2.5 text-white text-sm font-medium hover:text-purple-300 transition-colors"
+                  aria-label="Go to dashboard"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <button
+                  onClick={handleSignIn}
+                  className="px-6 py-2.5 text-white text-sm font-medium hover:text-purple-300 transition-colors"
+                  aria-label="Log in to your account"
+                >
+                  Log in
+                </button>
+              )}
+              <button
+                onClick={handleSignUp}
+                className="px-6 py-2.5 bg-white text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                aria-label="Sign up for free"
+              >
+                Sign up for free
+              </button>
+            </nav>
         </header>
 
         {/* Hero Section */}
