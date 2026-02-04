@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import NeuronParticles from '@/components/NeuronParticles';
 import { Paperclip, Search, BookOpen, Mic } from 'lucide-react';
-import { apiRequest, API_ROOT } from '@/lib/api';
+import { apiRequest } from '@/lib/api';
 
 export default function Home() {
   const router = useRouter();
@@ -19,33 +19,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    let cancelled = false;
-
-    const pingBackend = async () => {
-      try {
-        const response = await fetch(`${API_ROOT}/health`, { method: 'GET', mode: 'cors' });
-        if (!response.ok) {
-          throw new Error(`Health check failed (${response.status})`);
-        }
-        if (!cancelled) {
-          showToast('Connection Successful', 'success');
-        }
-      } catch (error: any) {
-        const message =
-          typeof error?.message === 'string' && error.message.toLowerCase().includes('failed to fetch')
-            ? 'Connection blocked by CORS. Please allow this origin in the backend.'
-            : error?.message || 'Connection failed.';
-        if (!cancelled) {
-          showToast(message, 'error');
-        }
-      }
-    };
-
-    pingBackend();
-
-    return () => {
-      cancelled = true;
-    };
+    // No health check needed - API errors will be handled in individual requests
   }, []);
 
   const handleSignIn = () => {
