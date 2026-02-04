@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    turbopack: {
+      root: '..',
+    },
+  },
+  // Keep any other existing settings below this line
 };
 
 export default nextConfig;
