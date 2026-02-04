@@ -61,13 +61,13 @@ export default function Home() {
 
         {/* Hero Section */}
         <section className="container mx-auto px-6 py-12 text-center flex flex-col items-center justify-center min-h-[calc(100vh-120px)]" aria-labelledby="hero-heading">
-          <div className="mb-8">
+          <div className="mb-4">
             <img
               src="/assets/brain-logo-landing.png"
               alt="EPI Brain Logo"
-              className="mx-auto w-[140px] h-[140px] object-contain"
-              width="140"
-              height="140"
+              className="mx-auto w-[210px] h-[210px] object-contain"
+              width="210"
+              height="210"
             />
           </div>
           
