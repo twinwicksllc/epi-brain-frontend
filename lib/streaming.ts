@@ -13,12 +13,19 @@ export async function* streamChatResponse(
 ): AsyncGenerator<StreamMessage> {
   const token = localStorage.getItem('access_token');
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  // Only add Authorization header if token exists (for authenticated users)
+  // Guest users will have requests sent without Authorization header
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`/api/proxy/chat/stream`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
+    headers,
     body: JSON.stringify({
       message,
       conversation_id: conversationId,

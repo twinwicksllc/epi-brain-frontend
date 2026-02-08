@@ -42,6 +42,8 @@ export default function Home() {
           // Extract user's first name or full name
           const displayName = userProfile.first_name || userProfile.name || userProfile.email || 'User';
           setUserName(displayName);
+          // Clear guest message counter when user logs in
+          localStorage.removeItem('guest_message_count');
           fetchRecentChats();
           const storedConversationId = localStorage.getItem('conversation_id');
           if (storedConversationId) {
@@ -139,8 +141,28 @@ export default function Home() {
     setIsVaultOpen(true);
   };
 
+  // Guest message limit: 3 messages before requiring authentication
+  const GUEST_MESSAGE_LIMIT = 3;
+
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
+
+    // Check guest message limit
+    if (!isLoggedIn) {
+      const guestMessageCount = parseInt(localStorage.getItem('guest_message_count') || '0', 10);
+      
+      if (guestMessageCount >= GUEST_MESSAGE_LIMIT) {
+        showToast(`Authentication required. Guests can send up to ${GUEST_MESSAGE_LIMIT} messages. Please sign up or log in to continue.`, 'error');
+        return;
+      }
+      
+      // Increment guest message count
+      localStorage.setItem('guest_message_count', (guestMessageCount + 1).toString());
+    } else {
+      // Reset guest message count when user logs in
+      localStorage.removeItem('guest_message_count');
+    }
+
     setIsSending(true);
 
     const endpoint = isDiscoveryMode ? '/chat/search' : '/chat/message';
