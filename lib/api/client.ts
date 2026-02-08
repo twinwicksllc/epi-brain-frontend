@@ -215,4 +215,9 @@ export const adminApi = {
     const response = await apiClient.get(`/admin/usage/${userId}`);
     return response.data;
   },
+
+  getUsageReport: async () => {
+    const response = await apiClient.get('/admin/usage/report');
+    return response.data;
+  },
 };

@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Conversation, User } from "@/types";
 import BrainLogo from "./BrainLogo";
-import { ChevronDown, Plus, Settings, LogOut, Menu, X } from "lucide-react";
+import { ChevronDown, Plus, Settings, LogOut, Menu, X, BarChart3 } from "lucide-react";
 
 interface ConversationSidebarProps {
   isOpen: boolean;
@@ -308,7 +310,16 @@ export default function ConversationSidebar({
 
         {/* Bottom Section - Settings/Profile - Hidden in Collapsed */}
         {!isCollapsed && (
-          <div className="border-t border-[#7B3FF2]/20 p-4">
+          <div className="border-t border-[#7B3FF2]/20 p-4 space-y-2">
+            {user?.is_admin && (
+              <Link
+                href="/admin"
+                className="w-full px-4 py-2 bg-[#7B3FF2]/20 hover:bg-[#7B3FF2]/30 border border-[#7B3FF2]/40 text-[#A78BFA] rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+              >
+                <BarChart3 className="w-4 h-4" />
+                Admin Dashboard
+              </Link>
+            )}
             <p className="text-xs text-white/40">Powered by EPI Brain</p>
           </div>
         )}
@@ -316,6 +327,15 @@ export default function ConversationSidebar({
         {/* Bottom Section - Settings Icon in Slim Rail */}
         {isCollapsed && (
           <div className="border-t border-[#7B3FF2]/20 p-3 space-y-2">
+            {user?.is_admin && (
+              <Link
+                href="/admin"
+                className="w-full p-2 hover:bg-[#7B3FF2]/10 text-[#A78BFA] rounded-lg transition-colors flex items-center justify-center"
+                title="Admin Dashboard"
+              >
+                <BarChart3 className="w-5 h-5" />
+              </Link>
+            )}
             <button
               className="w-full p-2 hover:bg-[#7B3FF2]/10 text-[#A78BFA] rounded-lg transition-colors flex items-center justify-center"
               title="Settings"
