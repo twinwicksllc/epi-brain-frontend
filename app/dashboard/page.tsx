@@ -43,6 +43,7 @@ export default function Dashboard() {
   const [liveTranscript, setLiveTranscript] = useState<string>("");
   const [isListening, setIsListening] = useState(false);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Calculate background gradient based on depth
   const getDepthGradient = (depth: number) => {
@@ -533,6 +534,8 @@ export default function Dashboard() {
         onClose={() => setIsSidebarOpen(false)}
         isLoading={isAiThinking}
         user={user}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
       {/* Main Content */}
