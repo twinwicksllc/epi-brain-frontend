@@ -16,6 +16,7 @@ export default function Home() {
   const [isSending, setIsSending] = useState(false);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
   const [isDiscoveryMode, setIsDiscoveryMode] = useState(false);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -34,9 +35,12 @@ export default function Home() {
 
     const verifyLogin = async () => {
       try {
-        await apiRequest('/users/me', { method: 'GET' });
+        const userProfile = await apiRequest<{ name?: string; first_name?: string; email?: string }>('/users/me', { method: 'GET' });
         if (active) {
           setIsLoggedIn(true);
+          // Extract user's first name or full name
+          const displayName = userProfile.first_name || userProfile.name || userProfile.email || 'User';
+          setUserName(displayName);
           fetchRecentChats();
           const storedConversationId = localStorage.getItem('conversation_id');
           if (storedConversationId) {
@@ -47,6 +51,7 @@ export default function Home() {
       } catch (error) {
         if (active) {
           setIsLoggedIn(false);
+          setUserName(null);
         }
       }
     };
@@ -252,7 +257,25 @@ export default function Home() {
       
       <main className="relative z-10">
         {/* Header */}
-        <header className="container mx-auto px-6 py-4 flex justify-end items-center">
+        <header className="container mx-auto px-6 py-4 flex justify-between items-center">
+          {isLoggedIn && userName && (
+            <div className="flex items-center gap-3">
+              {/* Glowing green dot indicator */}
+              <div className="relative flex items-center justify-center">
+                <div className="absolute w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg shadow-green-500/50"></div>
+              </div>
+              <span className="text-sm font-medium text-white/90">
+                Welcome back, <span className="text-[#A78BFA] font-semibold">{userName}</span>
+              </span>
+            </div>
+          )}
+          {!isLoggedIn && (
+            <div className="text-sm font-medium text-white/70">
+              Guest Mode
+            </div>
+          )}
+          
           <nav aria-label="Main navigation" className="flex items-center gap-3">
             {isLoggedIn ? (
               <Link
