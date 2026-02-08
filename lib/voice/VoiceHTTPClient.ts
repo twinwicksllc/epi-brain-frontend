@@ -20,7 +20,14 @@ export class VoiceHTTPClient {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const apiVersion = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
+    
+    // Construct base URL, avoiding double prefix
+    const normalizedUrl = apiUrl.replace(/\/+$/, ''); // Remove trailing slashes
+    this.baseURL = normalizedUrl.includes(`/api/${apiVersion}`)
+      ? normalizedUrl
+      : `${normalizedUrl}/api/${apiVersion}`;
   }
 
   /**
@@ -36,7 +43,7 @@ export class VoiceHTTPClient {
     });
 
     try {
-      const response = await fetch(`${this.baseURL}/api/v1/voice/generate`, {
+      const response = await fetch(`${this.baseURL}/voice/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

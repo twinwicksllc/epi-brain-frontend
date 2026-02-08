@@ -1,10 +1,17 @@
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
+
+// Construct base URL, avoiding double prefix
+const normalizedBaseUrl = API_URL.replace(/\/+$/, ''); // Remove trailing slashes
+const apiBaseURL = normalizedBaseUrl.includes(`/api/${API_VERSION}`)
+  ? normalizedBaseUrl
+  : `${normalizedBaseUrl}/api/${API_VERSION}`;
 
 // Create axios instance
 export const apiClient = axios.create({
-  baseURL: `${API_URL}/api/v1`,
+  baseURL: apiBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },
