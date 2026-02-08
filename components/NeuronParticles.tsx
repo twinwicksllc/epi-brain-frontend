@@ -15,13 +15,21 @@ export default function NeuronParticles() {
       return;
     }
 
-    console.log('NeuronParticles initializing, canvas size:', canvas.width, 'x', canvas.height);
+    const parent = canvas.parentElement;
+    if (!parent) return;
+
+    // Use parent container dimensions instead of window dimensions
+    // This ensures proper rendering when sidebar adjusts the viewport
+    const width = parent.clientWidth;
+    const height = parent.clientHeight;
+
+    console.log('NeuronParticles initializing, canvas size:', width, 'x', height);
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
 
     const particles: Array<{
       x: number;
@@ -84,14 +92,27 @@ export default function NeuronParticles() {
     animate();
 
     const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const parent = canvas.parentElement;
+      if (parent) {
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+      }
     };
 
+    // Listen for both window resize and watching parent container changes
     window.addEventListener('resize', handleResize);
+    
+    // Create ResizeObserver to watch parent container dimensions
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    if (parent) {
+      resizeObserver.observe(parent);
+    }
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
     };
   }, []);
 

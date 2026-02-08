@@ -50,9 +50,13 @@ export default function Home() {
           }
         }
       } catch (error) {
+        // If /users/me call fails (CORS, 500, network error, etc.),
+        // gracefully degrade to Guest Mode
+        // The sidebar and layout still render normally with isLoggedIn=false
         if (active) {
           setIsLoggedIn(false);
           setUserName(null);
+          console.log('Guest mode activated: API call to /users/me failed');
         }
       }
     };
@@ -224,7 +228,7 @@ export default function Home() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
         <NeuronParticles />
         {toast && (
           <div

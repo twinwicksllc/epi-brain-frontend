@@ -14,6 +14,10 @@ export function GlobalSidebarProvider({ children }: { children: ReactNode }) {
   const [isMounted, setIsMounted] = useState(false);
 
   // Load initial state from localStorage
+  // NOTE: This provider does NOT depend on any API calls
+  // It's pure client-side UI state management (redux-like)
+  // If /users/me or any backend call fails, this still works fine
+  // Auth errors are handled separately in individual pages (app/page.tsx, app/dashboard/page.tsx)
   useEffect(() => {
     const savedState = localStorage.getItem("sidebar_collapsed");
     if (savedState !== null) {
