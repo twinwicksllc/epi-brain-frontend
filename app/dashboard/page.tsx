@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import ConversationSidebar from "@/components/ConversationSidebar";
+import { useGlobalSidebar } from "@/components/GlobalSidebarProvider";
 import ModeSelector from "@/components/ModeSelector";
 import ChatInput from "@/components/ChatInput";
 import MessageBubble from "@/components/MessageBubble";
@@ -19,6 +20,7 @@ import { Message, Conversation, ClarityMetrics } from "@/types";
 
 export default function Dashboard() {
   const router = useRouter();
+  const { isCollapsed, toggleCollapse } = useGlobalSidebar();
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -43,7 +45,6 @@ export default function Dashboard() {
   const [liveTranscript, setLiveTranscript] = useState<string>("");
   const [isListening, setIsListening] = useState(false);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Calculate background gradient based on depth
   const getDepthGradient = (depth: number) => {
@@ -534,8 +535,8 @@ export default function Dashboard() {
         onClose={() => setIsSidebarOpen(false)}
         isLoading={isAiThinking}
         user={user}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={toggleCollapse}
       />
 
       {/* Main Content */}

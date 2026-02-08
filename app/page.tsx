@@ -4,13 +4,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import NeuronParticles from '@/components/NeuronParticles';
+import HomepageSidebar from '@/components/HomepageSidebar';
+import { useGlobalSidebar } from '@/components/GlobalSidebarProvider';
 import VaultView from '@/components/VaultView';
 import { Paperclip, Search, BookOpen, Mic } from 'lucide-react';
 import { apiRequest } from '@/lib/api';
-import { PanelLeft } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
+  const { isCollapsed, toggleCollapse } = useGlobalSidebar();
   const [inputValue, setInputValue] = useState('');
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isSending, setIsSending] = useState(false);
@@ -19,7 +21,6 @@ export default function Home() {
   const [userName, setUserName] = useState<string | null>(null);
   const [isDiscoveryMode, setIsDiscoveryMode] = useState(false);
   const [isVaultOpen, setIsVaultOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [recentChats, setRecentChats] = useState<Array<{ id: string; title?: string }>>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [conversationMessages, setConversationMessages] = useState<Array<{ id?: string; role?: string; content?: string }>>([]);
@@ -204,60 +205,44 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a0a2e] to-[#2d1b4e] relative overflow-hidden">
-      <NeuronParticles />
-      {isSidebarOpen && (
-        <aside className="fixed left-0 top-0 h-full w-64 bg-[#120a24]/95 border-r border-white/10 z-30 backdrop-blur-xl shadow-xl">
-          <div className="p-4 border-b border-white/10 flex items-center justify-between">
-            <span className="text-white text-sm font-semibold">Recent Chats</span>
-            <button
-              onClick={() => setIsSidebarOpen(false)}
-              className="text-white/70 hover:text-white text-xs"
-              aria-label="Close recent chats"
-            >
-              Close
-            </button>
+    <div className="flex h-screen bg-gradient-to-br from-[#1a0a2e] to-[#2d1b4e] relative overflow-hidden">
+      {/* Global Slim Rail Sidebar */}
+      <HomepageSidebar
+        isCollapsed={isCollapsed}
+        onToggleCollapse={toggleCollapse}
+        recentChats={recentChats}
+        onSelectChat={(chatId) => {
+          setCurrentConversationId(chatId);
+          localStorage.setItem('conversation_id', chatId);
+          fetchConversation(chatId);
+        }}
+        onNewChat={() => {
+          setCurrentConversationId(null);
+          setConversationMessages([]);
+          setInputValue('');
+        }}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <NeuronParticles />
+        {toast && (
+          <div
+            className={`fixed top-4 right-4 z-50 max-w-md rounded-lg border px-4 py-3 shadow-lg backdrop-blur-md transition-all ${
+              toast.type === 'success'
+                ? 'bg-green-500/90 border-green-400 text-white'
+                : 'bg-red-500/90 border-red-400 text-white'
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            {toast.message}
           </div>
-          <div className="p-3 space-y-2 overflow-y-auto h-[calc(100%-56px)]">
-            {recentChats.length === 0 && (
-              <div className="text-white/60 text-sm">No recent chats.</div>
-            )}
-            {recentChats.map((chat) => (
-              <button
-                key={chat.id}
-                onClick={() => {
-                  setCurrentConversationId(chat.id);
-                  localStorage.setItem('conversation_id', chat.id);
-                  fetchConversation(chat.id);
-                  setIsSidebarOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2 rounded-lg border border-white/5 hover:border-[#7B3FF2]/60 hover:bg-white/5 transition-colors text-sm text-white truncate ${
-                  currentConversationId === chat.id ? 'border-[#7B3FF2]/80 bg-[#7B3FF2]/10' : ''
-                }`}
-              >
-                {chat.title || 'Untitled conversation'}
-              </button>
-            ))}
-          </div>
-        </aside>
-      )}
-      {toast && (
-        <div
-          className={`fixed top-4 right-4 z-50 max-w-md rounded-lg border px-4 py-3 shadow-lg backdrop-blur-md transition-all ${
-            toast.type === 'success'
-              ? 'bg-green-500/90 border-green-400 text-white'
-              : 'bg-red-500/90 border-red-400 text-white'
-          }`}
-          role="status"
-          aria-live="polite"
-        >
-          {toast.message}
-        </div>
-      )}
-      
-      <main className="relative z-10">
-        {/* Header */}
-        <header className="container mx-auto px-6 py-4 flex justify-between items-center">
+        )}
+        
+        <main className="relative z-10 flex-1 flex flex-col overflow-hidden">
+          {/* Header */}
+          <header className="container mx-auto px-6 py-4 flex justify-between items-center z-20 relative">
           {isLoggedIn && userName && (
             <div className="flex items-center gap-3">
               {/* Glowing green dot indicator */}
@@ -305,35 +290,29 @@ export default function Home() {
         </header>
 
         <section
-          className="container mx-auto px-6 py-8 text-center flex flex-col items-center justify-center min-h-[calc(100vh-90px)]"
+          className="flex-1 flex flex-col items-center justify-center px-6 py-8 overflow-y-auto"
           aria-labelledby="hero-heading"
         >
-          <div className="mb-4 flex items-center justify-center gap-3">
-            <button
-              onClick={() => setIsSidebarOpen((prev) => !prev)}
-              aria-label="Toggle recent chats"
-              className="p-2 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 transition-colors"
-            >
-              <PanelLeft className="w-5 h-5 text-white" />
-            </button>
-            <img
-              src="/assets/brain-logo-landing.png"
-              alt="EPI Brain Logo"
-              className="w-[210px] h-[210px] object-contain"
-              width="210"
-              height="210"
-            />
-          </div>
+          <div className="w-full max-w-2xl">
+            <div className="mb-8 flex items-center justify-center">
+              <img
+                src="/assets/brain-logo-landing.png"
+                alt="EPI Brain Logo"
+                className="w-[180px] h-[180px] object-contain"
+                width="180"
+                height="180"
+              />
+            </div>
 
-          <h1 id="hero-heading" className="text-5xl md:text-6xl font-bold text-white mb-4 flex items-center justify-center gap-2">
-            EPI Brain
-          </h1>
+            <h1 id="hero-heading" className="text-5xl md:text-6xl font-bold text-white mb-4 flex items-center justify-center gap-2 text-center">
+              EPI Brain
+            </h1>
 
-          <p className="text-xl md:text-2xl text-gray-300 mb-16">
-            <span className="font-semibold">Voice + Emotional Intelligence.</span> Ask anything.
-          </p>
+            <p className="text-xl md:text-2xl text-gray-300 mb-12 text-center">
+              <span className="font-semibold">Voice + Emotional Intelligence.</span> Ask anything.
+            </p>
 
-          <div className="w-full max-w-[52rem] bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl px-5 py-5">
+            <div className="w-full bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl px-5 py-5">
             <div className="flex items-center gap-3 mb-3">
               <input
                 type="text"
@@ -429,7 +408,8 @@ export default function Home() {
                 </a>
               </div>
             </div>
-          </div>
+            </div>
+            </div>
         </section>
 
         {isVaultOpen && (
@@ -447,6 +427,7 @@ export default function Home() {
           </div>
         )}
       </main>
+      </div>
     </div>
   );
 }

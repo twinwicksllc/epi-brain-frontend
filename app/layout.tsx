@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { GlobalSidebarProvider } from "@/components/GlobalSidebarProvider";
 
 export const metadata: Metadata = {
   title: "EPI Brain | 9 AI Personalities for Life, Business & Growth",
@@ -84,7 +85,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning className="min-h-screen bg-gradient-to-br from-[#1a0a2e] to-[#2d1b4e]">{children}</body>
+      <body suppressHydrationWarning className="min-h-screen bg-gradient-to-br from-[#1a0a2e] to-[#2d1b4e]">
+        <GlobalSidebarProvider>
+          {children}
+        </GlobalSidebarProvider>
+      </body>
     </html>
   );
 }
