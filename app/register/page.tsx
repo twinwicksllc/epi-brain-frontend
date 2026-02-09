@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiRequest } from '@/lib/api';
 
 export default function Register() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -15,8 +16,17 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [discoveryData, setDiscoveryData] = useState<{ name?: string; intent?: string } | null>(null);
+  const [contextMode, setContextMode] = useState<string | null>(null);
+  const [contextConversationId, setContextConversationId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Capture context parameters from URL (passed from homepage)
+    const mode = searchParams.get('mode');
+    const conversationId = searchParams.get('conversation_id');
+    
+    if (mode) setContextMode(mode);
+    if (conversationId) setContextConversationId(conversationId);
+    
     // Load discovery data from localStorage using new keys
     const tempName = localStorage.getItem('epi_temp_name');
     const tempIntent = localStorage.getItem('epi_temp_intent');
@@ -45,7 +55,7 @@ export default function Register() {
         }
       }
     }
-  }, []);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +94,18 @@ export default function Register() {
 
       if (response.user) {
         localStorage.setItem('user', JSON.stringify(response.user));
+      }
+      
+      // Preserve conversation context from homepage guest session
+      if (contextConversationId) {
+        localStorage.setItem('conversation_id', contextConversationId);
+        console.log('[Register] Preserved conversation context:', contextConversationId);
+      }
+      
+      // If user was in discovery mode, preserve that too
+      if (contextMode === 'discovery') {
+        sessionStorage.setItem('resumeDiscoveryMode', 'true');
+        console.log('[Register] Will resume discovery mode after login');
       }
       
       // Keep discovery data for the dashboard to use

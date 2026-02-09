@@ -81,8 +81,16 @@ export default function Home() {
     router.push('/login');
   };
 
-  const handleSignUp = () => {
-    router.push('/register');
+  const handleSignUp = (preserveContext = false) => {
+    if (preserveContext && (currentConversationId || isDiscoveryMode)) {
+      // Pass context to register page via query parameters
+      const params = new URLSearchParams();
+      if (isDiscoveryMode) params.append('mode', 'discovery');
+      if (currentConversationId) params.append('conversation_id', currentConversationId);
+      router.push(`/register?${params.toString()}`);
+    } else {
+      router.push('/register');
+    }
   };
 
   const handleVoice = async () => {
@@ -397,7 +405,7 @@ export default function Home() {
               </button>
             )}
             <button
-              onClick={handleSignUp}
+              onClick={() => handleSignUp(true)}
               className="px-6 py-2.5 bg-white text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors"
               aria-label="Sign up for free"
             >
@@ -518,6 +526,28 @@ export default function Home() {
                       <span className="whitespace-pre-wrap break-words">{msg.content}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {!isLoggedIn && guestMessageCount === 4 && conversationMessages.length > 0 && (
+              <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-amber-50 border-2 border-purple-300 rounded-lg shadow-md">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-purple-900 mb-1">
+                      You have <span className="text-red-600 font-bold">1 discovery message left</span>
+                    </p>
+                    <p className="text-xs text-purple-700">
+                      Sign up now to keep this conversation going without limits!
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleSignUp(true)}
+                    className="flex-shrink-0 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors whitespace-nowrap"
+                    aria-label="Sign up to continue conversation"
+                  >
+                    Sign up
+                  </button>
                 </div>
               </div>
             )}
