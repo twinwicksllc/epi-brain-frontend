@@ -214,17 +214,54 @@ export const assistantToolsApi = {
 // Admin API
 export const adminApi = {
   getUsageStats: async () => {
-    const response = await apiClient.get('/admin/usage');
-    return response.data;
+    try {
+      const response = await apiClient.get('/admin/usage');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 422) {
+        console.error('[Admin API 422 Error] getUsageStats validation failed:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          detail: error.response.data?.detail,
+        });
+      }
+      throw error;
+    }
   },
 
   getUserUsage: async (userId: string) => {
-    const response = await apiClient.get(`/admin/usage/${userId}`);
-    return response.data;
+    try {
+      const response = await apiClient.get(`/admin/usage/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 422) {
+        console.error('[Admin API 422 Error] getUserUsage validation failed:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          detail: error.response.data?.detail,
+          userId,
+        });
+      }
+      throw error;
+    }
   },
 
   getUsageReport: async () => {
-    const response = await apiClient.get('/admin/usage/report');
-    return response.data;
+    try {
+      const response = await apiClient.get('/admin/usage/report');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 422) {
+        console.error('[Admin API 422 Error] getUsageReport validation failed:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          detail: error.response.data?.detail,
+        });
+      }
+      throw error;
+    }
   },
 };

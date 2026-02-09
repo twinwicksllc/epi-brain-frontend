@@ -90,41 +90,119 @@ export default function AdminDashboard() {
       try {
         const data = await adminApi.getUsageReport();
         if (data) {
-          setMetrics(data.metrics || data);
-          if (data.system_metrics) {
-            setSystemMetrics(data.system_metrics);
+          // Gracefully handle null/undefined values
+          const processed = {
+            metrics: {
+              total_tokens: data.metrics?.total_tokens ?? 0,
+              total_messages: data.metrics?.total_messages ?? 0,
+              total_cost: data.metrics?.total_cost ?? 0,
+              total_users: data.metrics?.total_users ?? 0,
+              active_users_today: data.metrics?.active_users_today ?? 0,
+              avg_tokens_per_conversation: data.metrics?.avg_tokens_per_conversation ?? 0,
+              avg_cost_per_user: data.metrics?.avg_cost_per_user ?? 0,
+              peak_usage_hour: data.metrics?.peak_usage_hour ?? 'N/A',
+            },
+            system_metrics: data.system_metrics,
+          };
+          setMetrics(processed.metrics);
+          if (processed.system_metrics) {
+            setSystemMetrics(processed.system_metrics);
           }
         }
-      } catch (reportErr) {
-        // If getUsageReport fails, try getUsageStats as fallback
-        console.log('getUsageReport not available, trying fallback...');
-        const stats = await adminApi.getUsageStats();
+      } catch (reportErr: any) {
+        // Log detailed error information for 422 responses
+        if (reportErr.response?.status === 422) {
+          console.error('[Admin Dashboard] 422 Error details:', {
+            endpoint: reportErr.response.config?.url,
+            validationErrors: reportErr.response.data?.detail,
+          });
+          setError(
+            'Failed to load metrics due to validation error. Check console for details. Trying fallback...'
+          );
+        } else {
+          console.log('getUsageReport not available, trying fallback...');
+        }
         
-        // Transform stats into metrics
-        if (Array.isArray(stats)) {
-          const aggregated = aggregateMetrics(stats);
-          setMetrics(aggregated);
+        try {
+          // If getUsageReport fails, try getUsageStats as fallback
+          const stats = await adminApi.getUsageStats();
+          
+          // Transform stats into metrics with safe defaults
+          if (Array.isArray(stats)) {
+            const aggregated = aggregateMetrics(stats);
+            setMetrics(aggregated);
+            setError(null); // Clear error if fallback succeeds
+          }
+        } catch (statsErr: any) {
+          // If both fail, set error and use default empty metrics
+          if (statsErr.response?.status === 422) {
+            console.error('[Admin Dashboard] getUsageStats 422 Error:', {
+              endpoint: statsErr.response.config?.url,
+              validationErrors: statsErr.response.data?.detail,
+            });
+            setError(
+              'Unable to load metrics. Backend validation error. Please contact support.'
+            );
+          } else {
+            setError('Failed to load usage metrics. Please try again later.');
+          }
+          
+          // Set default empty metrics so page can still render
+          setMetrics({
+            total_tokens: 0,
+            total_messages: 0,
+            total_cost: 0,
+            total_users: 0,
+            active_users_today: 0,
+            avg_tokens_per_conversation: 0,
+            avg_cost_per_user: 0,
+            peak_usage_hour: 'N/A',
+          });
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading metrics:', err);
       setError('Failed to load usage metrics. Please try again later.');
+      // Set default empty metrics so page can still render
+      setMetrics({
+        total_tokens: 0,
+        total_messages: 0,
+        total_cost: 0,
+        total_users: 0,
+        active_users_today: 0,
+        avg_tokens_per_conversation: 0,
+        avg_cost_per_user: 0,
+        peak_usage_hour: 'N/A',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const aggregateMetrics = (stats: any[]): UsageMetrics => {
-    const totalTokens = stats.reduce((sum, s) => sum + (s.total_tokens || 0), 0);
-    const totalMessages = stats.reduce((sum, s) => sum + (s.conversation_count || 0), 0);
+    if (!Array.isArray(stats) || stats.length === 0) {
+      return {
+        total_tokens: 0,
+        total_messages: 0,
+        total_cost: 0,
+        total_users: 0,
+        active_users_today: 0,
+        avg_tokens_per_conversation: 0,
+        avg_cost_per_user: 0,
+        peak_usage_hour: 'N/A',
+      };
+    }
+
+    const totalTokens = stats.reduce((sum, s) => sum + (parseInt(s.total_tokens) || 0), 0);
+    const totalMessages = stats.reduce((sum, s) => sum + (parseInt(s.conversation_count) || 0), 0);
     const totalUsers = stats.length;
 
     return {
-      total_tokens: totalTokens,
-      total_messages: totalMessages,
-      total_cost: totalTokens * 0.00001, // Estimate based on tokens
-      total_users: totalUsers,
-      active_users_today: Math.ceil(totalUsers * 0.6), // Estimate
+      total_tokens: Math.max(0, totalTokens),
+      total_messages: Math.max(0, totalMessages),
+      total_cost: Math.max(0, totalTokens * 0.00001), // Estimate based on tokens
+      total_users: Math.max(0, totalUsers),
+      active_users_today: Math.max(0, Math.ceil(totalUsers * 0.6)), // Estimate
       avg_tokens_per_conversation: totalMessages > 0 ? Math.round(totalTokens / totalMessages) : 0,
       avg_cost_per_user: totalUsers > 0 ? (totalTokens * 0.00001) / totalUsers : 0,
       peak_usage_hour: '14:00 UTC',
@@ -171,7 +249,7 @@ export default function AdminDashboard() {
               <p className="text-gray-400">Loading metrics...</p>
             </div>
           </div>
-        ) : error ? (
+        ) : error && !metrics ? (
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-red-400">
             <div className="flex items-center gap-3">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -180,6 +258,16 @@ export default function AdminDashboard() {
           </div>
         ) : metrics ? (
           <>
+            {/* Show error banner but still render metrics if available */}
+            {error && (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-yellow-600 mb-6">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <p className="text-sm">{error}</p>
+                </div>
+              </div>
+            )}
+
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {/* Total Tokens Card */}
@@ -189,10 +277,10 @@ export default function AdminDashboard() {
                   <Zap className="w-5 h-5 text-yellow-400" />
                 </div>
                 <p className="text-3xl font-bold text-white">
-                  {(metrics.total_tokens / 1000000).toFixed(2)}M
+                  {typeof metrics.total_tokens === 'number' ? (metrics.total_tokens / 1000000).toFixed(2) : '0.00'}M
                 </p>
                 <p className="text-xs text-gray-500 mt-2">
-                  {metrics.avg_tokens_per_conversation.toLocaleString()} avg/conversation
+                  {typeof metrics.avg_tokens_per_conversation === 'number' ? metrics.avg_tokens_per_conversation.toLocaleString() : '0'} avg/conversation
                 </p>
               </div>
 
@@ -203,7 +291,7 @@ export default function AdminDashboard() {
                   <MessageSquare className="w-5 h-5 text-blue-400" />
                 </div>
                 <p className="text-3xl font-bold text-white">
-                  {metrics.total_messages.toLocaleString()}
+                  {typeof metrics.total_messages === 'number' ? metrics.total_messages.toLocaleString() : '0'}
                 </p>
                 <p className="text-xs text-gray-500 mt-2">
                   across all conversations
@@ -217,10 +305,10 @@ export default function AdminDashboard() {
                   <DollarSign className="w-5 h-5 text-green-400" />
                 </div>
                 <p className="text-3xl font-bold text-white">
-                  ${metrics.total_cost.toFixed(2)}
+                  ${typeof metrics.total_cost === 'number' ? metrics.total_cost.toFixed(2) : '0.00'}
                 </p>
                 <p className="text-xs text-gray-500 mt-2">
-                  ${metrics.avg_cost_per_user.toFixed(4)} avg/user
+                  ${typeof metrics.avg_cost_per_user === 'number' ? metrics.avg_cost_per_user.toFixed(4) : '0.0000'} avg/user
                 </p>
               </div>
 
@@ -231,10 +319,10 @@ export default function AdminDashboard() {
                   <Users className="w-5 h-5 text-purple-400" />
                 </div>
                 <p className="text-3xl font-bold text-white">
-                  {metrics.total_users.toLocaleString()}
+                  {typeof metrics.total_users === 'number' ? metrics.total_users.toLocaleString() : '0'}
                 </p>
                 <p className="text-xs text-gray-500 mt-2">
-                  {metrics.active_users_today} active today
+                  {typeof metrics.active_users_today === 'number' ? metrics.active_users_today : '0'} active today
                 </p>
               </div>
             </div>
@@ -269,7 +357,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-400">Messages/Day</p>
                     <p className="text-lg font-semibold text-white">
-                      {Math.round(metrics.total_messages / 7).toLocaleString()}
+                      {typeof metrics.total_messages === 'number' ? Math.round(metrics.total_messages / 7).toLocaleString() : '0'}
                     </p>
                   </div>
                   <div className="pt-3 border-t border-[#7B3FF2]/10">
@@ -308,8 +396,11 @@ export default function AdminDashboard() {
             </div>
           </>
         ) : (
-          <div className="text-center text-gray-400">
-            <p>No metrics available</p>
+          <div className="bg-gray-500/10 border border-gray-500/30 rounded-lg p-6 text-gray-400">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <p>No metrics available. Please try refreshing the page.</p>
+            </div>
           </div>
         )}
       </div>
