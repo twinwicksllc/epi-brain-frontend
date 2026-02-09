@@ -195,11 +195,13 @@ export default function Home() {
         console.log(`[Guest Chat] Sending message ${newCount}/${GUEST_MESSAGE_LIMIT}`, { 
           message: inputValue.trim(),
           isGuest,
-          endpoint,
+          mode: 'discovery_mode',
+          endpoint: '/chat/message',
         });
       } else {
         console.log('[Auth Chat] Sending message', { 
           message: inputValue.trim(),
+          mode: isDiscoveryMode ? 'discovery_mode' : 'default',
           endpoint,
         });
       }
@@ -207,9 +209,10 @@ export default function Home() {
       // Use public API client for guest requests, authenticated API for logged-in users
       let response;
       if (isGuest) {
-        // Use public client (no auth headers) for guest requests
+        // Guests can only use discovery_mode on the backend
+        // The backend rejects other modes for unauthenticated users
         response = await publicChatApi.sendMessage(
-          isDiscoveryMode ? 'discovery' : 'default',
+          'discovery_mode',
           inputValue.trim(),
           currentConversationId || undefined
         );
