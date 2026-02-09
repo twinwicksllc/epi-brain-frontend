@@ -206,6 +206,15 @@ export default function Home() {
         });
       }
 
+      // Add user message to conversation display immediately (optimistic UI)
+      const userMessage = {
+        id: `msg-user-${Date.now()}`,
+        role: 'user',
+        content: inputValue.trim(),
+      };
+      console.log('[User Message] Adding to UI:', userMessage);
+      setConversationMessages(prev => [...prev, userMessage]);
+
       // Use public API client for guest requests, authenticated API for logged-in users
       let response;
       if (isGuest) {
@@ -216,6 +225,8 @@ export default function Home() {
           inputValue.trim(),
           currentConversationId || undefined
         );
+        console.log('[Guest Response] Full response:', response);
+        console.log('[Guest Response] Keys:', Object.keys(response || {}));
       } else {
         // Use authenticated API for logged-in users
         response = await apiRequest<{
@@ -226,16 +237,39 @@ export default function Home() {
           method: 'POST',
           body: JSON.stringify(payload),
         });
+        console.log('[Auth Response] Full response:', response);
       }
 
-      const conversationId = response.conversation_id || response.conversationId;
+      const conversationId = response?.conversation_id || response?.conversationId;
       if (conversationId) {
         localStorage.setItem('conversation_id', conversationId);
         setCurrentConversationId(conversationId);
       }
-      if (response.messages) {
+      
+      // Try to extract AI response from various possible formats
+      let aiContent = 
+        response?.content || 
+        response?.response || 
+        response?.message || 
+        response?.reply || 
+        '';
+      
+      console.log('[Response Parse] Extracted content:', aiContent);
+      console.log('[Response Parse] Has messages?', !!response?.messages);
+      
+      if (response?.messages) {
         setConversationMessages(response.messages);
+      } else if (aiContent) {
+        // For guest responses that don't have messages array, add the AI response to conversation
+        const newMessage = {
+          id: `msg-${Date.now()}`,
+          role: 'assistant',
+          content: aiContent,
+        };
+        console.log('[Local Message] Adding:', newMessage);
+        setConversationMessages(prev => [...prev, newMessage]);
       }
+      
       showToast(isDiscoveryMode ? 'Discovery search sent.' : 'Message sent.', 'success');
       setInputValue('');
       fetchRecentChats();
