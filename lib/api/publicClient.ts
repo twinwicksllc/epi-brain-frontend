@@ -42,13 +42,17 @@ publicApiClient.interceptors.response.use(
   }
 );
 
-// Public Chat API for discovery mode
+// Public Chat API for discovery mode and guest requests
 export const publicChatApi = {
-  sendMessage: async (mode: string, message: string) => {
-    const response = await publicApiClient.post('/chat/message', {
+  sendMessage: async (mode: string, message: string, conversationId?: string) => {
+    const payload: Record<string, any> = {
       mode,
       message,
-    });
+    };
+    if (conversationId) {
+      payload.conversation_id = conversationId;
+    }
+    const response = await publicApiClient.post('/chat/message', payload);
     return response.data;
   },
 };

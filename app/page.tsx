@@ -9,6 +9,7 @@ import { useGlobalSidebar } from '@/components/GlobalSidebarProvider';
 import VaultView from '@/components/VaultView';
 import { Paperclip, Search, BookOpen, Mic } from 'lucide-react';
 import { apiRequest } from '@/lib/api';
+import { publicChatApi } from '@/lib/api/publicClient';
 
 export default function Home() {
   const router = useRouter();
@@ -202,14 +203,27 @@ export default function Home() {
         });
       }
 
-      const response = await apiRequest<{
-        conversation_id?: string;
-        conversationId?: string;
-        messages?: Array<{ id?: string; role?: string; content?: string }>;
-      }>(endpoint, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
+      // Use public API client for guest requests, authenticated API for logged-in users
+      let response;
+      if (isGuest) {
+        // Use public client (no auth headers) for guest requests
+        response = await publicChatApi.sendMessage(
+          isDiscoveryMode ? 'discovery' : 'default',
+          inputValue.trim(),
+          currentConversationId || undefined
+        );
+      } else {
+        // Use authenticated API for logged-in users
+        response = await apiRequest<{
+          conversation_id?: string;
+          conversationId?: string;
+          messages?: Array<{ id?: string; role?: string; content?: string }>;
+        }>(endpoint, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+      }
+
       const conversationId = response.conversation_id || response.conversationId;
       if (conversationId) {
         localStorage.setItem('conversation_id', conversationId);
@@ -230,16 +244,8 @@ export default function Home() {
         endpoint,
       });
       
-      // For guests within the allowed message count, don't show authentication errors from 401s
-      // Only show authentication error if they've exceeded the limit (which shouldn't happen as we block above)
-      if (isGuest && currentGuestCount < GUEST_MESSAGE_LIMIT && error?.status === 401) {
-        // Guest still has attempts left but got a 401 from backend
-        // Show generic error instead of "Authentication required"
-        showToast('Connection issue. Please try again.', 'error');
-      } else {
-        // Show the actual error message for other cases
-        showToast(error?.message || 'Failed to send message.', 'error');
-      }
+      // Show friendly error messages
+      showToast(error?.message || 'Failed to send message.', 'error');
     } finally {
       setIsSending(false);
     }
