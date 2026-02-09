@@ -83,6 +83,111 @@ export class VoiceHTTPClient {
       output_format: 'mp3',
     });
   }
+
+  /**
+   * Stream speech generation with ElevenLabs
+   * Begins speaking as soon as first audio chunks arrive
+   */
+  async* streamSpeech(
+    textStream: AsyncIterable<string>,
+    personality: string,
+    gender: string
+  ): AsyncGenerator<Blob> {
+    console.log('🔊 Voice: Starting streaming TTS with ElevenLabs');
+    
+    let accumulatedText = '';
+    const CHUNK_THRESHOLD = 15; // Send to TTS after this many characters (words)
+    
+    for await (const textChunk of textStream) {
+      accumulatedText += textChunk;
+      
+      // Check if we have enough text to generate audio (roughly a phrase)
+      if (accumulatedText.length >= CHUNK_THRESHOLD) {
+        const textToSpeak = accumulatedText.trim();
+        
+        if (textToSpeak) {
+          console.log('🔊 Voice: Generating audio chunk for:', textToSpeak.substring(0, 50) + '...');
+          
+          try {
+            // Generate audio for this text chunk
+            const audioBlob = await this.generateSpeech({
+              text: textToSpeak,
+              personality,
+              gender,
+              model: 'eleven_turbo_v2', // Use Turbo for ultra-low latency
+              output_format: 'mp3',
+            });
+            
+            console.log('🔊 Voice: Yielding audio chunk, size:', audioBlob.size);
+            yield audioBlob;
+            
+            // Reset accumulator
+            accumulatedText = '';
+          } catch (error) {
+            console.error('🔊 Voice: Error generating audio chunk:', error);
+            // Continue with next chunk even if one fails
+          }
+        }
+      }
+    }
+    
+    // Generate final chunk if any text remains
+    if (accumulatedText.trim()) {
+      console.log('🔊 Voice: Generating final audio chunk');
+      try {
+        const audioBlob = await this.generateSpeech({
+          text: accumulatedText.trim(),
+          personality,
+          gender,
+          model: 'eleven_turbo_v2',
+          output_format: 'mp3',
+        });
+        yield audioBlob;
+      } catch (error) {
+        console.error('🔊 Voice: Error generating final audio chunk:', error);
+      }
+    }
+    
+    console.log('🔊 Voice: Streaming TTS complete');
+  }
+
+  /**
+   * Transcribe audio using Whisper V3 Turbo
+   * Optimized for near-instant transcription
+   */
+  async transcribeAudio(audioBlob: Blob): Promise<string> {
+    console.log('🎤 Voice: Transcribing audio with Whisper V3 Turbo');
+    console.log('🎤 Voice: Audio size:', audioBlob.size, 'bytes');
+
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'audio.webm');
+      formData.append('model', 'whisper-large-v3-turbo');
+
+      const response = await fetch(`${this.baseURL}/voice/transcribe`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🎤 Voice: Transcription error:', response.status, errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('🎤 Voice: Transcription result:', result);
+      
+      return result.text || result.transcription || '';
+
+    } catch (error) {
+      console.error('🎤 Voice: Error transcribing audio:', error);
+      throw error;
+    }
+  }
 }
 
 // Singleton instance

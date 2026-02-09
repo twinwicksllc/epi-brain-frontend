@@ -13,6 +13,7 @@ import PushToTalk from "@/components/PushToTalk";
 import LiveTranscript from "@/components/LiveTranscript";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import VaultView from "@/components/VaultView";
+import LayerIndicator, { NEBPLayer } from "@/components/LayerIndicator";
 import { authApi, chatApi, modesApi, userApi, assistantToolsApi } from "@/lib/api/client";
 import { VoiceManager } from "@/lib/voice/VoiceManager";
 import { Message, Conversation, ClarityMetrics } from "@/types";
@@ -43,6 +44,7 @@ export default function Dashboard() {
   const [capturedIntentUsed, setCapturedIntentUsed] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState<string>("");
   const [isListening, setIsListening] = useState(false);
+  const [nebpLayer, setNebpLayer] = useState<NEBPLayer>('idle');
   const [isVaultOpen, setIsVaultOpen] = useState(false);
 
   // Calculate background gradient based on depth
@@ -606,7 +608,15 @@ export default function Dashboard() {
       onTranscriptChange={handleTranscriptChange}
       onTranscriptComplete={handleTranscriptComplete}
       voiceManager={voiceManagerRef.current}
+      onLayerChange={setNebpLayer}
     />
+
+    {/* NEBP Layer Indicator */}
+    {nebpLayer !== 'idle' && (
+      <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50">
+        <LayerIndicator layer={nebpLayer} />
+      </div>
+    )}
 
     {/* Floating Action Button (Mobile Only) */}
     <FloatingActionButton

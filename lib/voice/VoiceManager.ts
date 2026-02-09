@@ -51,6 +51,44 @@ export class VoiceManager {
   }
 
   /**
+   * Stream text to speech for low-latency response
+   * Begins speaking as text arrives from the AI
+   */
+  async speakStream(
+    textStream: AsyncIterable<string>,
+    personality: string,
+    gender: string,
+    onLayerChange?: (layer: 'sensing' | 'synthesizing' | 'idle') => void
+  ): Promise<void> {
+    console.log('🔊 VoiceManager: Starting streaming speech');
+    
+    try {
+      // Signal that we're synthesizing
+      onLayerChange?.('synthesizing');
+      
+      // Stream audio generation and playback
+      for await (const audioBlob of voiceHTTPClient.streamSpeech(
+        textStream,
+        personality,
+        gender
+      )) {
+        console.log('🔊 VoiceManager: Received audio chunk, playing immediately');
+        
+        // Play each chunk as it arrives (don't wait for streaming to complete)
+        await this.audioPlayer.play(audioBlob);
+      }
+      
+      console.log('🔊 VoiceManager: Stream speech complete');
+      onLayerChange?.('idle');
+      
+    } catch (error) {
+      console.error('🔊 VoiceManager: Error in stream speech:', error);
+      onLayerChange?.('idle');
+      throw error;
+    }
+  }
+
+  /**
    * Process the voice queue
    */
   private async processQueue(): Promise<void> {

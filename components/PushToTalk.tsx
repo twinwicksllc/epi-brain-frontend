@@ -8,12 +8,14 @@ interface PushToTalkProps {
   onTranscriptChange: (transcript: string) => void;
   onTranscriptComplete: (transcript: string) => void;
   voiceManager: any;
+  onLayerChange?: (layer: 'sensing' | 'synthesizing' | 'idle') => void;
 }
 
 export default function PushToTalk({
   isVoiceEnabled,
   onTranscriptChange,
   onTranscriptComplete,
+  onLayerChange,
   voiceManager,
 }: PushToTalkProps) {
   const [isListening, setIsListening] = useState(false);
@@ -131,8 +133,7 @@ export default function PushToTalk({
     
     try {
       recognitionRef.current.start();
-      setIsListening(true);
-      setCurrentTranscript('');
+      onLayerChange?.('sensing'); // Signal NEBP sensing layer
     } catch (e) {
       console.error('Error starting recognition:', e);
     }
@@ -143,6 +144,7 @@ export default function PushToTalk({
     
     try {
       recognitionRef.current.stop();
+      onLayerChange?.('idle'); // Return to idle state
     } catch (e) {
       console.error('Error stopping recognition:', e);
     }

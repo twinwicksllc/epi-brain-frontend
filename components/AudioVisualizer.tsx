@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, Brain, Sparkles } from 'lucide-react';
+import { NEBPLayer } from './LayerIndicator';
 
 interface AudioVisualizerProps {
   isPlaying: boolean;
   isMuted: boolean;
   onToggleMute?: () => void;
+  nebpLayer?: NEBPLayer;
 }
 
-export default function AudioVisualizer({ isPlaying, isMuted, onToggleMute }: AudioVisualizerProps) {
+export default function AudioVisualizer({ isPlaying, isMuted, onToggleMute, nebpLayer = 'idle' }: AudioVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   const [barHeights, setBarHeights] = useState<number[]>([]);
@@ -85,6 +87,23 @@ export default function AudioVisualizer({ isPlaying, isMuted, onToggleMute }: Au
 
   return (
     <div className="relative flex items-center gap-2">
+      {/* NEBP Layer State Badge */}
+      {nebpLayer !== 'idle' && (
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#7B3FF2]/20 border border-[#7B3FF2]/30">
+          {nebpLayer === 'sensing' ? (
+            <>
+              <Brain className="w-3 h-3 text-[#A78BFA] animate-pulse" />
+              <span className="text-xs text-[#A78BFA]">Sensing</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-3 h-3 text-[#7B3FF2] animate-pulse" />
+              <span className="text-xs text-[#7B3FF2]">Synthesizing</span>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Mute button */}
       {onToggleMute && (
         <button

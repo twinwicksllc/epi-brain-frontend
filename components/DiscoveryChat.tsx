@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
 import RegistrationPromptModal from './RegistrationPromptModal';
+import LayerIndicator, { NEBPLayer } from './LayerIndicator';
 import { Volume2, VolumeX } from 'lucide-react';
 import { publicChatApi } from '@/lib/api/publicClient';
+import { streamChatResponse } from '@/lib/streaming';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -41,6 +43,8 @@ export default function DiscoveryChat({
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [inputDisabled, setInputDisabled] = useState(false);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [nebpLayer, setNebpLayer] = useState<NEBPLayer>('idle');
+  const [streamingResponse, setStreamingResponse] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const MAX_EXCHANGES = 3;
@@ -69,6 +73,8 @@ export default function DiscoveryChat({
     const newMessages = [...messages, { role: 'user' as const, content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
+    setNebpLayer('synthesizing'); // Enter synthesis state
+    setStreamingResponse('');
 
     let nextCapturedData = { ...capturedData };
 
@@ -203,6 +209,8 @@ export default function DiscoveryChat({
           content: 'Sorry, I had trouble connecting. Please try again in a moment.',
         },
       ]);
+      setNebpLayer('idle'); // Return to idle after response complete
+      setStreamingResponse('');
     } finally {
       setIsLoading(false);
     }
@@ -219,6 +227,11 @@ export default function DiscoveryChat({
 
   return (
     <div className="relative w-full max-w-3xl mx-auto">
+      {/* NEBP Layer Indicator */}
+      <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 z-20">
+        <LayerIndicator layer={nebpLayer} />
+      </div>
+
       <div className="bg-[#1a102e]/60 backdrop-blur-xl border border-[#7B3FF2]/30 rounded-2xl shadow-2xl shadow-[#7B3FF2]/20 overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#7B3FF2]/20 to-[#A78BFA]/20 border-b border-[#7B3FF2]/30 px-4 py-3">
@@ -269,7 +282,7 @@ export default function DiscoveryChat({
           {isLoading && (
             <MessageBubble
               role="assistant"
-              content="Thinking..."
+              content={streamingResponse || "Thinking..."}
               isStreaming={true}
             />
           )}
