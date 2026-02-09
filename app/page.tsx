@@ -25,6 +25,7 @@ export default function Home() {
   const [recentChats, setRecentChats] = useState<Array<{ id: string; title?: string }>>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [conversationMessages, setConversationMessages] = useState<Array<{ id?: string; role?: string; content?: string }>>([]);
+  const [guestMessageCount, setGuestMessageCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -45,6 +46,7 @@ export default function Home() {
           setUserName(displayName);
           // Clear guest message counter when user logs in
           localStorage.removeItem('guest_message_count');
+          setGuestMessageCount(0);
           fetchRecentChats();
           const storedConversationId = localStorage.getItem('conversation_id');
           if (storedConversationId) {
@@ -62,6 +64,7 @@ export default function Home() {
           // Always reset guest message count when entering guest mode (fresh session)
           // This gives guests a fresh 5-message quota each session
           localStorage.setItem('guest_message_count', '0');
+          setGuestMessageCount(0);
           console.log('Guest mode activated: /users/me returned', error?.status || 'error', '(expected for unauthenticated users)');
         }
       }
@@ -192,6 +195,7 @@ export default function Home() {
       if (isGuest) {
         const newCount = currentGuestCount + 1;
         localStorage.setItem('guest_message_count', newCount.toString());
+        setGuestMessageCount(newCount);
         console.log(`[Guest Chat] Sending message ${newCount}/${GUEST_MESSAGE_LIMIT}`, { 
           message: inputValue.trim(),
           isGuest,
@@ -431,13 +435,13 @@ export default function Home() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-amber-900">GUEST MODE</span>
-                    <span className="text-sm text-amber-800">{GUEST_MESSAGE_LIMIT - Math.min(parseInt(localStorage.getItem('guest_message_count') || '0', 10), GUEST_MESSAGE_LIMIT)} of {GUEST_MESSAGE_LIMIT} messages remaining</span>
+                    <span className="text-sm text-amber-800">{GUEST_MESSAGE_LIMIT - Math.min(guestMessageCount, GUEST_MESSAGE_LIMIT)} of {GUEST_MESSAGE_LIMIT} messages remaining</span>
                   </div>
                 </div>
                 <div className="mt-2 w-full bg-amber-200 rounded-full h-2 overflow-hidden">
                   <div 
                     className="bg-amber-600 h-full transition-all duration-300" 
-                    style={{width: `${(Math.min(parseInt(localStorage.getItem('guest_message_count') || '0', 10), GUEST_MESSAGE_LIMIT) / GUEST_MESSAGE_LIMIT) * 100}%`}}
+                    style={{width: `${(Math.min(guestMessageCount, GUEST_MESSAGE_LIMIT) / GUEST_MESSAGE_LIMIT) * 100}%`}}
                   ></div>
                 </div>
               </div>
