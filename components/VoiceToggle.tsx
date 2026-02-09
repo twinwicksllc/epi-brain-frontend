@@ -5,7 +5,6 @@ import { Volume2, VolumeX } from "lucide-react";
 interface VoiceToggleProps {
   isEnabled: boolean;
   onToggle: (enabled: boolean) => void;
-  currentMode: string;
   selectedGender: string;
   onGenderChange: (gender: string) => void;
   voiceStats: any;
@@ -14,7 +13,6 @@ interface VoiceToggleProps {
 export default function VoiceToggle({
   isEnabled,
   onToggle,
-  currentMode,
   selectedGender,
   onGenderChange,
   voiceStats,

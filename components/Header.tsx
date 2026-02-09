@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X, LogOut, User, Settings, Archive } from "lucide-react";
-import ModeSelector from "./ModeSelector";
 import VoiceToggle from "./VoiceToggle";
 import SettingsModal from "./SettingsModal";
 import { ClarityMetrics } from "@/types";
@@ -11,8 +10,6 @@ import { ClarityMetrics } from "@/types";
 interface HeaderProps {
   user: any;
   onMenuClick: () => void;
-  currentMode: string;
-  onModeChange: (mode: string) => void;
   isVoiceEnabled: boolean;
   onVoiceToggle: (enabled: boolean) => void;
   selectedVoiceGender: string;
@@ -28,8 +25,6 @@ interface HeaderProps {
 export default function Header({
   user,
   onMenuClick,
-  currentMode,
-  onModeChange,
   isVoiceEnabled,
   onVoiceToggle,
   selectedVoiceGender,
@@ -84,17 +79,9 @@ export default function Header({
                 )}
               </div>
             </Link>
-
-            {/* Mode Selector - MOVED TO LEFT SIDE */}
-            <div className="hidden md:block">
-              <ModeSelector
-                currentMode={currentMode}
-                onModeChange={onModeChange}
-              />
-            </div>
           </div>
 
-          {/* Rigault Button */}
+          {/* Vault Button */}
             {onVaultClick && (
               <button
                 onClick={onVaultClick}
@@ -116,21 +103,12 @@ export default function Header({
                 <VoiceToggle
                   isEnabled={isVoiceEnabled}
                   onToggle={onVoiceToggle}
-                  currentMode={currentMode}
                   selectedGender={selectedVoiceGender}
                   onGenderChange={onVoiceGenderChange}
                   voiceStats={voiceStats}
                 />
               </div>
             )}
-
-            {/* Mobile Mode Selector (shown in menu area) */}
-            <div className="md:hidden">
-              <ModeSelector
-                currentMode={currentMode}
-                onModeChange={onModeChange}
-              />
-            </div>
 
             {/* User Avatar/Menu */}
             <div className="relative">
@@ -233,7 +211,6 @@ export default function Header({
                       <VoiceToggle
                         isEnabled={isVoiceEnabled}
                         onToggle={onVoiceToggle}
-                        currentMode={currentMode}
                         selectedGender={selectedVoiceGender}
                         onGenderChange={onVoiceGenderChange}
                         voiceStats={voiceStats}

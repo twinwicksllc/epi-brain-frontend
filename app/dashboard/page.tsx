@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import ConversationSidebar from "@/components/ConversationSidebar";
 import { useGlobalSidebar } from "@/components/GlobalSidebarProvider";
-import ModeSelector from "@/components/ModeSelector";
 import ChatInput from "@/components/ChatInput";
 import MessageBubble from "@/components/MessageBubble";
 import VoiceToggle from "@/components/VoiceToggle";
@@ -545,8 +544,6 @@ export default function Dashboard() {
         <Header
           user={user}
           onMenuClick={() => setIsSidebarOpen(true)}
-          currentMode={currentMode}
-          onModeChange={handleModeChange}
           isVoiceEnabled={isVoiceEnabled}
           onVoiceToggle={handleVoiceToggle}
           selectedVoiceGender={selectedVoiceGender}
