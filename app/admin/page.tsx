@@ -110,8 +110,18 @@ export default function AdminDashboard() {
           }
         }
       } catch (reportErr: any) {
-        // Log detailed error information for 422 responses
-        if (reportErr.response?.status === 422) {
+        // Handle authentication errors for admin endpoints
+        if (reportErr.response?.status === 401) {
+          console.error('[Admin Dashboard] 401 Unauthorized - Admin key missing or invalid');
+          setError(
+            'Admin API key is not configured or invalid. Please check environment variables and ensure NEXT_PUBLIC_ADMIN_API_KEY is set correctly.'
+          );
+        } else if (reportErr.response?.status === 403) {
+          console.error('[Admin Dashboard] 403 Forbidden - Admin key lacks sufficient permissions');
+          setError(
+            'Your admin API key does not have sufficient permissions to access this resource. Please contact your system administrator.'
+          );
+        } else if (reportErr.response?.status === 422) {
           const detail = reportErr.response.data?.detail;
           const validationErrors = Array.isArray(detail) 
             ? detail.map((d: any) => ({
@@ -145,7 +155,17 @@ export default function AdminDashboard() {
           }
         } catch (statsErr: any) {
           // If both fail, set error and use default empty metrics
-          if (statsErr.response?.status === 422) {
+          if (statsErr.response?.status === 401) {
+            console.error('[Admin Dashboard] 401 Unauthorized on fallback - Admin key missing or invalid');
+            setError(
+              'Admin API key is not configured or invalid. Please check environment variables and ensure NEXT_PUBLIC_ADMIN_API_KEY is set correctly.'
+            );
+          } else if (statsErr.response?.status === 403) {
+            console.error('[Admin Dashboard] 403 Forbidden on fallback - Admin key lacks sufficient permissions');
+            setError(
+              'Your admin API key does not have sufficient permissions to access this resource. Please contact your system administrator.'
+            );
+          } else if (statsErr.response?.status === 422) {
             const detail = statsErr.response.data?.detail;
             const validationErrors = Array.isArray(detail) 
               ? detail.map((d: any) => ({

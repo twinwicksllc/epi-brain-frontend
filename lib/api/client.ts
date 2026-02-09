@@ -215,25 +215,28 @@ export const assistantToolsApi = {
 export const adminApi = {
   getUsageStats: async () => {
     try {
-      const response = await apiClient.get('/admin/usage');
+      const adminKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY;
+      if (!adminKey) {
+        console.error('[Admin API Error] NEXT_PUBLIC_ADMIN_API_KEY is not configured');
+        throw new Error('Admin API key is not configured');
+      }
+      const response = await apiClient.get('/admin/usage', {
+        params: { admin_key: adminKey },
+      });
       return response.data;
     } catch (error: any) {
-      if (error.response?.status === 422) {
-        const detail = error.response.data?.detail;
-        const errorDetails = Array.isArray(detail) 
-          ? detail.map((d: any) => ({
-              loc: d.loc,
-              msg: d.msg,
-              type: d.type,
-            }))
-          : detail;
-        console.error('[Admin API 422 Error] getUsageStats validation failed:', {
+      if (error.response?.status === 401) {
+        console.error('[Admin API 401 Error] Missing or invalid admin key:', {
           status: error.response.status,
           statusText: error.response.statusText,
-          fullResponse: error.response.data,
-          validationErrors: errorDetails,
+          message: 'Admin API key is missing or not configured',
         });
-        console.log('[Validation Error Details]', JSON.stringify(errorDetails, null, 2));
+      } else if (error.response?.status === 403) {
+        console.error('[Admin API 403 Error] Admin key is forbidden/invalid:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          message: 'The provided admin key is invalid or has insufficient permissions',
+        });
       }
       throw error;
     }
@@ -241,26 +244,30 @@ export const adminApi = {
 
   getUserUsage: async (userId: string) => {
     try {
-      const response = await apiClient.get(`/admin/usage/${userId}`);
+      const adminKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY;
+      if (!adminKey) {
+        console.error('[Admin API Error] NEXT_PUBLIC_ADMIN_API_KEY is not configured');
+        throw new Error('Admin API key is not configured');
+      }
+      const response = await apiClient.get(`/admin/usage/${userId}`, {
+        params: { admin_key: adminKey },
+      });
       return response.data;
     } catch (error: any) {
-      if (error.response?.status === 422) {
-        const detail = error.response.data?.detail;
-        const errorDetails = Array.isArray(detail) 
-          ? detail.map((d: any) => ({
-              loc: d.loc,
-              msg: d.msg,
-              type: d.type,
-            }))
-          : detail;
-        console.error('[Admin API 422 Error] getUserUsage validation failed:', {
+      if (error.response?.status === 401) {
+        console.error('[Admin API 401 Error] Missing or invalid admin key:', {
           status: error.response.status,
           statusText: error.response.statusText,
-          fullResponse: error.response.data,
-          validationErrors: errorDetails,
           userId,
+          message: 'Admin API key is missing or not configured',
         });
-        console.log('[Validation Error Details]', JSON.stringify(errorDetails, null, 2));
+      } else if (error.response?.status === 403) {
+        console.error('[Admin API 403 Error] Admin key is forbidden/invalid:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          userId,
+          message: 'The provided admin key is invalid or has insufficient permissions',
+        });
       }
       throw error;
     }
@@ -268,25 +275,28 @@ export const adminApi = {
 
   getUsageReport: async () => {
     try {
-      const response = await apiClient.get('/admin/usage/report');
+      const adminKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY;
+      if (!adminKey) {
+        console.error('[Admin API Error] NEXT_PUBLIC_ADMIN_API_KEY is not configured');
+        throw new Error('Admin API key is not configured');
+      }
+      const response = await apiClient.get('/admin/usage/report', {
+        params: { admin_key: adminKey },
+      });
       return response.data;
     } catch (error: any) {
-      if (error.response?.status === 422) {
-        const detail = error.response.data?.detail;
-        const errorDetails = Array.isArray(detail) 
-          ? detail.map((d: any) => ({
-              loc: d.loc,
-              msg: d.msg,
-              type: d.type,
-            }))
-          : detail;
-        console.error('[Admin API 422 Error] getUsageReport validation failed:', {
+      if (error.response?.status === 401) {
+        console.error('[Admin API 401 Error] Missing or invalid admin key:', {
           status: error.response.status,
           statusText: error.response.statusText,
-          fullResponse: error.response.data,
-          validationErrors: errorDetails,
+          message: 'Admin API key is missing or not configured',
         });
-        console.log('[Validation Error Details]', JSON.stringify(errorDetails, null, 2));
+      } else if (error.response?.status === 403) {
+        console.error('[Admin API 403 Error] Admin key is forbidden/invalid:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          message: 'The provided admin key is invalid or has insufficient permissions',
+        });
       }
       throw error;
     }
