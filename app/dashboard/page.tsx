@@ -562,7 +562,6 @@ export default function Dashboard() {
             {messages.length === 0 ? (
               <div className="text-center text-white/60 py-20">
                 <p className="text-lg">Start a conversation with your AI companion</p>
-                <p className="text-sm mt-2">Select a mode and type a message below</p>
               </div>
             ) : (
               messages.map((message) => (
