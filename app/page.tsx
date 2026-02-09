@@ -147,17 +147,21 @@ export default function Home() {
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
-    // Check guest message limit
+    let isGuest = false;
+    let currentGuestCount = 0;
+
+    // Track guest status and message count
     if (!isLoggedIn) {
-      const guestMessageCount = parseInt(localStorage.getItem('guest_message_count') || '0', 10);
+      isGuest = true;
+      currentGuestCount = parseInt(localStorage.getItem('guest_message_count') || '0', 10);
       
-      if (guestMessageCount >= GUEST_MESSAGE_LIMIT) {
+      // Only block AFTER reaching the limit
+      // Guests can send messages 1, 2, and 3 (count: 0, 1, 2)
+      // Message 4 would be count: 3, which is blocked
+      if (currentGuestCount >= GUEST_MESSAGE_LIMIT) {
         showToast(`Authentication required. Guests can send up to ${GUEST_MESSAGE_LIMIT} messages. Please sign up or log in to continue.`, 'error');
         return;
       }
-      
-      // Increment guest message count
-      localStorage.setItem('guest_message_count', (guestMessageCount + 1).toString());
     } else {
       // Reset guest message count when user logs in
       localStorage.removeItem('guest_message_count');
@@ -176,6 +180,23 @@ export default function Home() {
     }
 
     try {
+      // Increment guest message count AFTER validation, BEFORE sending
+      // This ensures we count the attempt, whether it succeeds or fails
+      if (isGuest) {
+        const newCount = currentGuestCount + 1;
+        localStorage.setItem('guest_message_count', newCount.toString());
+        console.log(`[Guest Chat] Sending message ${newCount}/${GUEST_MESSAGE_LIMIT}`, { 
+          message: inputValue.trim(),
+          isGuest,
+          endpoint,
+        });
+      } else {
+        console.log('[Auth Chat] Sending message', { 
+          message: inputValue.trim(),
+          endpoint,
+        });
+      }
+
       const response = await apiRequest<{
         conversation_id?: string;
         conversationId?: string;
@@ -196,7 +217,24 @@ export default function Home() {
       setInputValue('');
       fetchRecentChats();
     } catch (error: any) {
-      showToast(error?.message || 'Failed to send message.', 'error');
+      console.error('[Chat Error]', { 
+        isGuest,
+        currentGuestCount,
+        errorStatus: error?.status,
+        errorMessage: error?.message,
+        endpoint,
+      });
+      
+      // For guests within the allowed message count, don't show authentication errors from 401s
+      // Only show authentication error if they've exceeded the limit (which shouldn't happen as we block above)
+      if (isGuest && currentGuestCount < GUEST_MESSAGE_LIMIT && error?.status === 401) {
+        // Guest still has attempts left but got a 401 from backend
+        // Show generic error instead of "Authentication required"
+        showToast('Connection issue. Please try again.', 'error');
+      } else {
+        // Show the actual error message for other cases
+        showToast(error?.message || 'Failed to send message.', 'error');
+      }
     } finally {
       setIsSending(false);
     }
