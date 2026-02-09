@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiRequest } from '@/lib/api';
 
 export default function Register() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -20,12 +19,19 @@ export default function Register() {
   const [contextConversationId, setContextConversationId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Capture context parameters from URL (passed from homepage)
-    const mode = searchParams.get('mode');
-    const conversationId = searchParams.get('conversation_id');
+    // Read search params and other client-side only operations
+    const getSearchParams = () => {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get('mode');
+        const conversationId = params.get('conversation_id');
+        
+        if (mode) setContextMode(mode);
+        if (conversationId) setContextConversationId(conversationId);
+      }
+    };
     
-    if (mode) setContextMode(mode);
-    if (conversationId) setContextConversationId(conversationId);
+    getSearchParams();
     
     // Load discovery data from localStorage using new keys
     const tempName = localStorage.getItem('epi_temp_name');
@@ -55,7 +61,7 @@ export default function Register() {
         }
       }
     }
-  }, [searchParams]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
