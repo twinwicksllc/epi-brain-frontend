@@ -60,7 +60,7 @@ export default function Home() {
           setIsLoggedIn(false);
           setUserName(null);
           // Always reset guest message count when entering guest mode (fresh session)
-          // This gives guests a fresh 3-message quota each session
+          // This gives guests a fresh 5-message quota each session
           localStorage.setItem('guest_message_count', '0');
           console.log('Guest mode activated: /users/me returned', error?.status || 'error', '(expected for unauthenticated users)');
         }
@@ -145,8 +145,8 @@ export default function Home() {
     setIsVaultOpen(true);
   };
 
-  // Guest message limit: 3 messages before requiring authentication
-  const GUEST_MESSAGE_LIMIT = 3;
+  // Guest message limit: 5 messages before requiring authentication
+  const GUEST_MESSAGE_LIMIT = 5;
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -166,7 +166,7 @@ export default function Home() {
       // Message 4 would be count: 3, which is blocked
       if (currentGuestCount >= GUEST_MESSAGE_LIMIT) {
         console.log(`[Guest Chat] BLOCKED - Guest has exhausted ${GUEST_MESSAGE_LIMIT} messages`);
-        showToast(`Authentication required. Guests can send up to ${GUEST_MESSAGE_LIMIT} messages. Please sign up or log in to continue.`, 'error');
+        showToast(`Authentication required. You've reached the ${GUEST_MESSAGE_LIMIT}-message limit. Please sign up or log in to continue.`, 'error');
         return;
       }
     } else {
@@ -426,6 +426,22 @@ export default function Home() {
             </p>
 
             <div className="w-full bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl px-5 py-5">
+            {!isLoggedIn && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-amber-900">GUEST MODE</span>
+                    <span className="text-sm text-amber-800">{GUEST_MESSAGE_LIMIT - Math.min(parseInt(localStorage.getItem('guest_message_count') || '0', 10), GUEST_MESSAGE_LIMIT)} of {GUEST_MESSAGE_LIMIT} messages remaining</span>
+                  </div>
+                </div>
+                <div className="mt-2 w-full bg-amber-200 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="bg-amber-600 h-full transition-all duration-300" 
+                    style={{width: `${(Math.min(parseInt(localStorage.getItem('guest_message_count') || '0', 10), GUEST_MESSAGE_LIMIT) / GUEST_MESSAGE_LIMIT) * 100}%`}}
+                  ></div>
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-3 mb-3">
               <input
                 type="text"
