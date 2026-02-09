@@ -52,16 +52,17 @@ export default function Home() {
             fetchConversation(storedConversationId);
           }
         }
-      } catch (error) {
-        // If /users/me call fails (CORS, 500, network error, etc.),
+      } catch (error: any) {
+        // If /users/me call fails (403 Forbidden, 401 Unauthorized, network error, etc.),
         // gracefully degrade to Guest Mode
         // The sidebar and layout still render normally with isLoggedIn=false
         if (active) {
           setIsLoggedIn(false);
           setUserName(null);
-          // Reset guest message count when entering guest mode (fresh session)
-          localStorage.removeItem('guest_message_count');
-          console.log('Guest mode activated: API call to /users/me failed');
+          // Always reset guest message count when entering guest mode (fresh session)
+          // This gives guests a fresh 3-message quota each session
+          localStorage.setItem('guest_message_count', '0');
+          console.log('Guest mode activated: /users/me returned', error?.status || 'error', '(expected for unauthenticated users)');
         }
       }
     };
