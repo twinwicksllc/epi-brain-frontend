@@ -8,11 +8,9 @@ import {
   Users, 
   MessageSquare, 
   Volume2, 
-  CreditCard, 
   ArrowUpDown,
   TrendingUp,
-  Clock,
-  DollarSign,
+  AlertCircle,
 } from 'lucide-react';
 
 interface UsageStats {
@@ -30,6 +28,7 @@ export default function AdminAnalytics() {
   const router = useRouter();
   const [stats, setStats] = useState<UsageStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [sortField, setSortField] = useState<keyof UsageStats>('total_tokens');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filter, setFilter] = useState<string>('all');
@@ -50,14 +49,24 @@ export default function AdminAnalytics() {
 
   const loadStats = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const data = await adminApi.getUsageStats();
-      setStats(data);
-    } catch (error) {
+      setStats(Array.isArray(data) ? data : []);
+    } catch (error: any) {
       console.error('Error loading usage stats:', error);
-      // If unauthorized, redirect to dashboard
-      if ((error as any)?.response?.status === 403) {
-        router.push('/dashboard');
+      if (error.response?.status === 401) {
+        setError(
+          'Admin API key is not configured or invalid. Please check environment variables and ensure NEXT_PUBLIC_ADMIN_API_KEY is set correctly.'
+        );
+      } else if (error.response?.status === 403) {
+        setError(
+          'Your admin API key does not have sufficient permissions to access this resource. Please contact your system administrator.'
+        );
+      } else if (error.response?.status) {
+        setError(`Error loading analytics: ${error.response.statusText} (${error.response.status})`);
+      } else {
+        setError('Failed to load analytics. Please try again later.');
       }
     } finally {
       setIsLoading(false);
@@ -157,6 +166,22 @@ export default function AdminAnalytics() {
           <p className="text-white/60">Monitor user activity and platform usage</p>
         </div>
 
+        {/* Error Banner */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-600 mb-6">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <p>{error}</p>
+            </div>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A78BFA]" />
+          </div>
+        ) : (
+          <>
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
@@ -310,6 +335,8 @@ export default function AdminAnalytics() {
             </table>
           </div>
         </div>
+          </>
+        )}
       </main>
     </div>
   );
