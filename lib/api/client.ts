@@ -219,12 +219,21 @@ export const adminApi = {
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 422) {
+        const detail = error.response.data?.detail;
+        const errorDetails = Array.isArray(detail) 
+          ? detail.map((d: any) => ({
+              loc: d.loc,
+              msg: d.msg,
+              type: d.type,
+            }))
+          : detail;
         console.error('[Admin API 422 Error] getUsageStats validation failed:', {
           status: error.response.status,
           statusText: error.response.statusText,
-          data: error.response.data,
-          detail: error.response.data?.detail,
+          fullResponse: error.response.data,
+          validationErrors: errorDetails,
         });
+        console.log('[Validation Error Details]', JSON.stringify(errorDetails, null, 2));
       }
       throw error;
     }
@@ -236,13 +245,22 @@ export const adminApi = {
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 422) {
+        const detail = error.response.data?.detail;
+        const errorDetails = Array.isArray(detail) 
+          ? detail.map((d: any) => ({
+              loc: d.loc,
+              msg: d.msg,
+              type: d.type,
+            }))
+          : detail;
         console.error('[Admin API 422 Error] getUserUsage validation failed:', {
           status: error.response.status,
           statusText: error.response.statusText,
-          data: error.response.data,
-          detail: error.response.data?.detail,
+          fullResponse: error.response.data,
+          validationErrors: errorDetails,
           userId,
         });
+        console.log('[Validation Error Details]', JSON.stringify(errorDetails, null, 2));
       }
       throw error;
     }
@@ -254,12 +272,21 @@ export const adminApi = {
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 422) {
+        const detail = error.response.data?.detail;
+        const errorDetails = Array.isArray(detail) 
+          ? detail.map((d: any) => ({
+              loc: d.loc,
+              msg: d.msg,
+              type: d.type,
+            }))
+          : detail;
         console.error('[Admin API 422 Error] getUsageReport validation failed:', {
           status: error.response.status,
           statusText: error.response.statusText,
-          data: error.response.data,
-          detail: error.response.data?.detail,
+          fullResponse: error.response.data,
+          validationErrors: errorDetails,
         });
+        console.log('[Validation Error Details]', JSON.stringify(errorDetails, null, 2));
       }
       throw error;
     }

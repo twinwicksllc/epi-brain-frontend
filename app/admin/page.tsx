@@ -112,10 +112,20 @@ export default function AdminDashboard() {
       } catch (reportErr: any) {
         // Log detailed error information for 422 responses
         if (reportErr.response?.status === 422) {
+          const detail = reportErr.response.data?.detail;
+          const validationErrors = Array.isArray(detail) 
+            ? detail.map((d: any) => ({
+                field: d.loc?.[d.loc.length - 1] || 'unknown',
+                message: d.msg,
+                type: d.type,
+                location: d.loc,
+              }))
+            : detail;
           console.error('[Admin Dashboard] 422 Error details:', {
             endpoint: reportErr.response.config?.url,
-            validationErrors: reportErr.response.data?.detail,
+            validationErrors,
           });
+          console.log('[Error Details - Readable Format]', JSON.stringify(validationErrors, null, 2));
           setError(
             'Failed to load metrics due to validation error. Check console for details. Trying fallback...'
           );
@@ -136,10 +146,20 @@ export default function AdminDashboard() {
         } catch (statsErr: any) {
           // If both fail, set error and use default empty metrics
           if (statsErr.response?.status === 422) {
+            const detail = statsErr.response.data?.detail;
+            const validationErrors = Array.isArray(detail) 
+              ? detail.map((d: any) => ({
+                  field: d.loc?.[d.loc.length - 1] || 'unknown',
+                  message: d.msg,
+                  type: d.type,
+                  location: d.loc,
+                }))
+              : detail;
             console.error('[Admin Dashboard] getUsageStats 422 Error:', {
               endpoint: statsErr.response.config?.url,
-              validationErrors: statsErr.response.data?.detail,
+              validationErrors,
             });
+            console.log('[Error Details - Readable Format]', JSON.stringify(validationErrors, null, 2));
             setError(
               'Unable to load metrics. Backend validation error. Please contact support.'
             );
