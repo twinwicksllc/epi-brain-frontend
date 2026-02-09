@@ -58,6 +58,8 @@ export default function Home() {
         if (active) {
           setIsLoggedIn(false);
           setUserName(null);
+          // Reset guest message count when entering guest mode (fresh session)
+          localStorage.removeItem('guest_message_count');
           console.log('Guest mode activated: API call to /users/me failed');
         }
       }
@@ -155,10 +157,13 @@ export default function Home() {
       isGuest = true;
       currentGuestCount = parseInt(localStorage.getItem('guest_message_count') || '0', 10);
       
+      console.log(`[Guest Chat] Current count: ${currentGuestCount}/${GUEST_MESSAGE_LIMIT}`);
+      
       // Only block AFTER reaching the limit
       // Guests can send messages 1, 2, and 3 (count: 0, 1, 2)
       // Message 4 would be count: 3, which is blocked
       if (currentGuestCount >= GUEST_MESSAGE_LIMIT) {
+        console.log(`[Guest Chat] BLOCKED - Guest has exhausted ${GUEST_MESSAGE_LIMIT} messages`);
         showToast(`Authentication required. Guests can send up to ${GUEST_MESSAGE_LIMIT} messages. Please sign up or log in to continue.`, 'error');
         return;
       }
