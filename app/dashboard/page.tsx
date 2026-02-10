@@ -45,6 +45,7 @@ export default function Dashboard() {
   const [liveTranscript, setLiveTranscript] = useState<string>("");
   const [isListening, setIsListening] = useState(false);
   const [nebpLayer, setNebpLayer] = useState<NEBPLayer>('idle');
+  const [layerMetadata, setLayerMetadata] = useState<any>(null); // Track layer timing (Reasoning vs Buffer)
   const [isVaultOpen, setIsVaultOpen] = useState(false);
 
   // Calculate background gradient based on depth
@@ -217,22 +218,38 @@ export default function Dashboard() {
 
   const loadConversation = async (conversationId: string) => {
     try {
-      console.log('Loading conversation:', conversationId);
+      console.log('[Mode Enforcement] Loading conversation:', conversationId);
       const response = await chatApi.getConversation(conversationId);
-      console.log('Conversation response:', response);
+      console.log('[Mode Enforcement] Conversation response:', response);
       
       if (response) {
         setMessages(response.messages || []);
+        
+        // Reset NEBP layer when loading existing conversation
+        setNebpLayer('idle');
+        setLayerMetadata(null);
+        setLiveTranscript('');
+        setIsListening(false);
+        setIsAiThinking(false);
+        
         if (response.depth) {
           setCurrentDepth(response.depth);
         }
-        // Set the mode from the conversation
+        
+        // Set the mode from the conversation - this is critical for mode enforcement
         if (response.mode) {
+          console.log('[Mode Enforcement] Setting mode from conversation:', response.mode);
           setCurrentMode(response.mode);
+        } else {
+          console.warn('[Mode Enforcement] No mode found in conversation, keeping current:', currentMode);
         }
+        
+        // Signal backend to reset session state for this conversation
+        // Prevents Reasoning/Buffer from previous context bleeding in
+        await chatApi.resetConversationState(conversationId);
       }
     } catch (error) {
-      console.error("Error loading conversation:", error);
+      console.error("[Mode Enforcement] Error loading conversation:", error);
     }
   };
 
@@ -318,14 +335,29 @@ export default function Dashboard() {
     setIsAiThinking(true); // Start brain animation
 
     try {
-      console.log("Sending message:", { mode: currentMode, message: content, conversationId: currentConversationId });
+      // MODE ENFORCEMENT: Verify mode is correctly set and being sent
+      console.log('[Mode Enforcement] ===== MESSAGE SEND VERIFICATION =====');
+      console.log('[Mode Enforcement] Current Mode:', currentMode);
+      console.log('[Mode Enforcement] Conversation ID:', currentConversationId);
+      console.log('[Mode Enforcement] Message Content:', content.substring(0, 100) + '...');
+      console.log('[Mode Enforcement] Action Lens/Active Mode:', localStorage.getItem('active_lens'));
+      console.log('[Mode Enforcement] Layer State:', nebpLayer);
+      console.log('[Mode Enforcement] ========================================');
       
       // Add a minimum 1-second delay to ensure animation is visible
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const response = await chatApi.sendMessage(currentMode, content, currentConversationId || undefined);
       
-      console.log("Received response:", response);
+      // MODE ENFORCEMENT: Verify response matches expected mode
+      console.log('[Mode Enforcement] ===== RESPONSE VERIFICATION =====');
+      console.log('[Mode Enforcement] Response Mode:', response.mode);
+      console.log('[Mode Enforcement] Request Mode:', currentMode);
+      console.log('[Mode Enforcement] Mode Match:', response.mode === currentMode ? '✓ PASS' : '✗ FAIL - CONTEXT MISMATCH!');
+      console.log('[Mode Enforcement] Response Layers:', response.layers || 'N/A');
+      console.log('[Mode Enforcement] Reasoning Time:', response.reasoning_time || 'N/A');
+      console.log('[Mode Enforcement] Buffer Time:', response.buffer_time || 'N/A');
+      console.log('[Mode Enforcement] ================================');
 
       const aiMessage: Message = {
         id: response.message_id || Date.now().toString(),
@@ -337,6 +369,20 @@ export default function Dashboard() {
 
       setMessages((prev) => [...prev, aiMessage]);
       setIsAiThinking(false); // Stop brain animation
+      
+      // Extract layer metadata for visualization audit
+      // This helps detect if Buffer is dominating over Reasoning core
+      if (response.reasoning_time !== undefined || response.buffer_time !== undefined) {
+        const metadata = {
+          reasoning_time: response.reasoning_time,
+          buffer_time: response.buffer_time,
+          parsing_time: response.parsing_time,
+          total_time: response.total_time,
+          buffer_dominant: response.buffer_time > response.reasoning_time,
+        };
+        setLayerMetadata(metadata);
+        console.log('[Visualization Audit] Layer Metadata:', metadata);
+      }
 
       // Update conversation ID if this is a new conversation
       if (response.conversation_id && response.conversation_id !== currentConversationId) {
@@ -410,10 +456,28 @@ export default function Dashboard() {
     }
   };
 
-  const handleNewConversation = () => {
+  const handleNewConversation = async () => {
+    console.log('[Mode Enforcement] Starting new conversation with mode:', currentMode);
+    
+    // Reset all frontend state
     setCurrentConversationId(null);
     setMessages([]);
     setCurrentDepth(0);
+    
+    // Reset NEBP layer visualization
+    setNebpLayer('idle');
+    setLayerMetadata(null);
+    
+    // Reset voice/transcription state
+    setLiveTranscript('');
+    setIsListening(false);
+    setIsAiThinking(false);
+    
+    // Signal backend to clear session state (Reasoning/Buffer buffers)
+    // This prevents context bleed from previous conversations
+    await chatApi.resetConversationState();
+    
+    console.log('[Mode Enforcement] New conversation initialized - mode:', currentMode);
   };
 
   const handleSelectConversation = (conversationId: string) => {
@@ -614,7 +678,7 @@ export default function Dashboard() {
     {/* NEBP Layer Indicator */}
     {nebpLayer !== 'idle' && (
       <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50">
-        <LayerIndicator layer={nebpLayer} />
+        <LayerIndicator layer={nebpLayer} metadata={layerMetadata} />
       </div>
     )}
 

@@ -145,6 +145,23 @@ export const chatApi = {
     const response = await apiClient.get(`/chat/conversations/${conversationId}/depth`);
     return response.data;
   },
+
+  resetConversationState: async (conversationId?: string) => {
+    // Signal backend to clear session state (Reasoning/Buffer) when starting new conversation
+    // or switching contexts. This ensures no state bleed from previous conversations.
+    console.log('[Mode Enforcement] Resetting conversation state for conversationId:', conversationId);
+    try {
+      const response = await apiClient.post('/chat/session/reset', {
+        conversation_id: conversationId,
+      });
+      console.log('[Mode Enforcement] Session state reset successful');
+      return response.data;
+    } catch (error: any) {
+      // Silently fail if endpoint not available (backend might not support it yet)
+      console.log('[Mode Enforcement] Session reset endpoint not available:', error.message);
+      return null;
+    }
+  },
 };
 
 // Modes API
