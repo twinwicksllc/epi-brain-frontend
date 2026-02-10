@@ -301,4 +301,56 @@ export const adminApi = {
       throw error;
     }
   },
+
+  // Voice-specific admin endpoints
+  getVoiceStatsToday: async () => {
+    try {
+      const adminKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY;
+      if (!adminKey) {
+        console.error('[Admin API Error] NEXT_PUBLIC_ADMIN_API_KEY is not configured');
+        throw new Error('Admin API key is not configured');
+      }
+      const response = await apiClient.get('/admin/voice-stats/today', {
+        params: { admin_key: adminKey },
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('[Admin API Error] getVoiceStatsToday failed:', error);
+      throw error;
+    }
+  },
+
+  getVoiceStatsMonth: async () => {
+    try {
+      const adminKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY;
+      if (!adminKey) {
+        console.error('[Admin API Error] NEXT_PUBLIC_ADMIN_API_KEY is not configured');
+        throw new Error('Admin API key is not configured');
+      }
+      const response = await apiClient.get('/admin/voice-stats/month', {
+        params: { admin_key: adminKey },
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('[Admin API Error] getVoiceStatsMonth failed:', error);
+      throw error;
+    }
+  },
+
+  getVoiceProjection: async () => {
+    try {
+      const adminKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY;
+      if (!adminKey) {
+        console.error('[Admin API Error] NEXT_PUBLIC_ADMIN_API_KEY is not configured');
+        throw new Error('Admin API key is not configured');
+      }
+      const response = await apiClient.get('/admin/voice-stats/projection', {
+        params: { admin_key: adminKey },
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('[Admin API Error] getVoiceProjection failed:', error);
+      throw error;
+    }
+  },
 };

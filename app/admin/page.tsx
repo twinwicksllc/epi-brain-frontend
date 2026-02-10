@@ -14,6 +14,8 @@ import {
   Clock,
   Zap,
   AlertCircle,
+  Mic,
+  TrendingDown,
 } from 'lucide-react';
 
 interface UsageMetrics {
@@ -25,6 +27,8 @@ interface UsageMetrics {
   avg_tokens_per_conversation: number;
   avg_cost_per_user: number;
   peak_usage_hour: string;
+  token_cost?: number;
+  voice_cost?: number;
 }
 
 interface SystemMetrics {
@@ -35,10 +39,37 @@ interface SystemMetrics {
   most_used_mode: string;
 }
 
+interface VoiceStatsToday {
+  total_minutes: number;
+  total_cost: number;
+  total_requests: number;
+  avg_duration: number;
+  model_breakdown: Record<string, number>;
+}
+
+interface VoiceStatsMonth {
+  total_minutes: number;
+  total_cost: number;
+  total_requests: number;
+  daily_average: number;
+  peak_day: string;
+}
+
+interface VoiceProjection {
+  current_daily_cost: number;
+  projected_monthly_cost: number;
+  days_in_month: number;
+  days_elapsed: number;
+  trend: 'increasing' | 'decreasing' | 'stable';
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics | null>(null);
+  const [voiceToday, setVoiceToday] = useState<VoiceStatsToday | null>(null);
+  const [voiceMonth, setVoiceMonth] = useState<VoiceStatsMonth | null>(null);
+  const [voiceProjection, setVoiceProjection] = useState<VoiceProjection | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -86,134 +117,65 @@ export default function AdminDashboard() {
       setIsLoading(true);
       setError(null);
 
-      // Try to fetch usage report
-      try {
-        const data = await adminApi.getUsageReport();
-        if (data) {
-          // Gracefully handle null/undefined values
-          const processed = {
-            metrics: {
-              total_tokens: data.metrics?.total_tokens ?? 0,
-              total_messages: data.metrics?.total_messages ?? 0,
-              total_cost: data.metrics?.total_cost ?? 0,
-              total_users: data.metrics?.total_users ?? 0,
-              active_users_today: data.metrics?.active_users_today ?? 0,
-              avg_tokens_per_conversation: data.metrics?.avg_tokens_per_conversation ?? 0,
-              avg_cost_per_user: data.metrics?.avg_cost_per_user ?? 0,
-              peak_usage_hour: data.metrics?.peak_usage_hour ?? 'N/A',
-            },
-            system_metrics: data.system_metrics,
-          };
-          setMetrics(processed.metrics);
-          if (processed.system_metrics) {
-            setSystemMetrics(processed.system_metrics);
-          }
+      // Load all metrics in parallel for better performance
+      const [usageData, voiceTodayData, voiceMonthData, voiceProjectionData] = await Promise.allSettled([
+        adminApi.getUsageReport(),
+        adminApi.getVoiceStatsToday(),
+        adminApi.getVoiceStatsMonth(),
+        adminApi.getVoiceProjection(),
+      ]);
+
+      // Process usage report
+      if (usageData.status === 'fulfilled' && usageData.value) {
+        const data = usageData.value;
+        const processed = {
+          total_tokens: data.metrics?.total_tokens ?? 0,
+          total_messages: data.metrics?.total_messages ?? 0,
+          total_cost: data.metrics?.total_cost ?? 0,
+          total_users: data.metrics?.total_users ?? 0,
+          active_users_today: data.metrics?.active_users_today ?? 0,
+          avg_tokens_per_conversation: data.metrics?.avg_tokens_per_conversation ?? 0,
+          avg_cost_per_user: data.metrics?.avg_cost_per_user ?? 0,
+          peak_usage_hour: data.metrics?.peak_usage_hour ?? 'N/A',
+          token_cost: data.metrics?.token_cost,
+          voice_cost: data.metrics?.voice_cost,
+        };
+        setMetrics(processed);
+        if (data.system_metrics) {
+          setSystemMetrics(data.system_metrics);
         }
-      } catch (reportErr: any) {
-        // Handle authentication errors for admin endpoints
-        if (reportErr.response?.status === 401) {
-          console.error('[Admin Dashboard] 401 Unauthorized - Admin key missing or invalid');
-          setError(
-            'Admin API key is not configured or invalid. Please check environment variables and ensure NEXT_PUBLIC_ADMIN_API_KEY is set correctly.'
-          );
-        } else if (reportErr.response?.status === 403) {
-          console.error('[Admin Dashboard] 403 Forbidden - Admin key lacks sufficient permissions');
-          setError(
-            'Your admin API key does not have sufficient permissions to access this resource. Please contact your system administrator.'
-          );
-        } else if (reportErr.response?.status === 422) {
-          const detail = reportErr.response.data?.detail;
-          const validationErrors = Array.isArray(detail) 
-            ? detail.map((d: any) => ({
-                field: d.loc?.[d.loc.length - 1] || 'unknown',
-                message: d.msg,
-                type: d.type,
-                location: d.loc,
-              }))
-            : detail;
-          console.error('[Admin Dashboard] 422 Error details:', {
-            endpoint: reportErr.response.config?.url,
-            validationErrors,
-          });
-          console.log('[Error Details - Readable Format]', JSON.stringify(validationErrors, null, 2));
-          setError(
-            'Failed to load metrics due to validation error. Check console for details. Trying fallback...'
-          );
-        } else {
-          console.log('getUsageReport not available, trying fallback...');
-        }
-        
+      } else {
+        // Fallback to getUsageStats if getUsageReport fails
         try {
-          // If getUsageReport fails, try getUsageStats as fallback
           const stats = await adminApi.getUsageStats();
-          
-          // Transform stats into metrics with safe defaults
           if (Array.isArray(stats)) {
             const aggregated = aggregateMetrics(stats);
             setMetrics(aggregated);
-            setError(null); // Clear error if fallback succeeds
           }
-        } catch (statsErr: any) {
-          // If both fail, set error and use default empty metrics
-          if (statsErr.response?.status === 401) {
-            console.error('[Admin Dashboard] 401 Unauthorized on fallback - Admin key missing or invalid');
-            setError(
-              'Admin API key is not configured or invalid. Please check environment variables and ensure NEXT_PUBLIC_ADMIN_API_KEY is set correctly.'
-            );
-          } else if (statsErr.response?.status === 403) {
-            console.error('[Admin Dashboard] 403 Forbidden on fallback - Admin key lacks sufficient permissions');
-            setError(
-              'Your admin API key does not have sufficient permissions to access this resource. Please contact your system administrator.'
-            );
-          } else if (statsErr.response?.status === 422) {
-            const detail = statsErr.response.data?.detail;
-            const validationErrors = Array.isArray(detail) 
-              ? detail.map((d: any) => ({
-                  field: d.loc?.[d.loc.length - 1] || 'unknown',
-                  message: d.msg,
-                  type: d.type,
-                  location: d.loc,
-                }))
-              : detail;
-            console.error('[Admin Dashboard] getUsageStats 422 Error:', {
-              endpoint: statsErr.response.config?.url,
-              validationErrors,
-            });
-            console.log('[Error Details - Readable Format]', JSON.stringify(validationErrors, null, 2));
-            setError(
-              'Unable to load metrics. Backend validation error. Please contact support.'
-            );
-          } else {
-            setError('Failed to load usage metrics. Please try again later.');
-          }
-          
-          // Set default empty metrics so page can still render
-          setMetrics({
-            total_tokens: 0,
-            total_messages: 0,
-            total_cost: 0,
-            total_users: 0,
-            active_users_today: 0,
-            avg_tokens_per_conversation: 0,
-            avg_cost_per_user: 0,
-            peak_usage_hour: 'N/A',
-          });
+        } catch (statsErr) {
+          console.error('Failed to load usage stats:', statsErr);
+          setError('Unable to load usage metrics');
         }
       }
+
+      // Process voice stats today
+      if (voiceTodayData.status === 'fulfilled' && voiceTodayData.value) {
+        setVoiceToday(voiceTodayData.value);
+      }
+
+      // Process voice stats month
+      if (voiceMonthData.status === 'fulfilled' && voiceMonthData.value) {
+        setVoiceMonth(voiceMonthData.value);
+      }
+
+      // Process voice projection
+      if (voiceProjectionData.status === 'fulfilled' && voiceProjectionData.value) {
+        setVoiceProjection(voiceProjectionData.value);
+      }
+
     } catch (err: any) {
       console.error('Error loading metrics:', err);
-      setError('Failed to load usage metrics. Please try again later.');
-      // Set default empty metrics so page can still render
-      setMetrics({
-        total_tokens: 0,
-        total_messages: 0,
-        total_cost: 0,
-        total_users: 0,
-        active_users_today: 0,
-        avg_tokens_per_conversation: 0,
-        avg_cost_per_user: 0,
-        peak_usage_hour: 'N/A',
-      });
+      setError('Failed to load metrics. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -348,7 +310,15 @@ export default function AdminDashboard() {
                   ${typeof metrics.total_cost === 'number' ? metrics.total_cost.toFixed(2) : '0.00'}
                 </p>
                 <p className="text-xs text-gray-500 mt-2">
-                  ${typeof metrics.avg_cost_per_user === 'number' ? metrics.avg_cost_per_user.toFixed(4) : '0.0000'} avg/user
+                  {(metrics.token_cost !== undefined && metrics.voice_cost !== undefined) ? (
+                    <>
+                      Tokens: ${metrics.token_cost.toFixed(2)} | Voice: ${metrics.voice_cost.toFixed(2)}
+                    </>
+                  ) : (
+                    <>
+                      ${typeof metrics.avg_cost_per_user === 'number' ? metrics.avg_cost_per_user.toFixed(4) : '0.0000'} avg/user
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -366,6 +336,81 @@ export default function AdminDashboard() {
                 </p>
               </div>
             </div>
+
+            {/* Voice Metrics Row */}
+            {(voiceToday || voiceMonth || voiceProjection) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {/* Voice Cost Today */}
+                {voiceToday && (
+                  <div className="bg-[#2d1b4e]/30 backdrop-blur border border-[#7B3FF2]/20 rounded-lg p-6 hover:border-[#7B3FF2]/40 transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-gray-400 text-sm font-medium">Voice Cost (Today)</h3>
+                      <Mic className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <p className="text-3xl font-bold text-white">
+                      ${voiceToday.total_cost.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {voiceToday.total_minutes.toFixed(1)} min / {voiceToday.total_requests} requests
+                    </p>
+                  </div>
+                )}
+
+                {/* Voice Minutes Today */}
+                {voiceToday && (
+                  <div className="bg-[#2d1b4e]/30 backdrop-blur border border-[#7B3FF2]/20 rounded-lg p-6 hover:border-[#7B3FF2]/40 transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-gray-400 text-sm font-medium">Voice Minutes (Today)</h3>
+                      <Clock className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <p className="text-3xl font-bold text-white">
+                      {voiceToday.total_minutes.toFixed(1)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {voiceToday.avg_duration.toFixed(1)}s avg duration
+                    </p>
+                  </div>
+                )}
+
+                {/* Voice Cost Month */}
+                {voiceMonth && (
+                  <div className="bg-[#2d1b4e]/30 backdrop-blur border border-[#7B3FF2]/20 rounded-lg p-6 hover:border-[#7B3FF2]/40 transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-gray-400 text-sm font-medium">Voice Cost (Month)</h3>
+                      <DollarSign className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <p className="text-3xl font-bold text-white">
+                      ${voiceMonth.total_cost.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {voiceMonth.total_minutes.toFixed(1)} min / ${voiceMonth.daily_average.toFixed(2)}/day avg
+                    </p>
+                  </div>
+                )}
+
+                {/* Voice Projection */}
+                {voiceProjection && (
+                  <div className="bg-[#2d1b4e]/30 backdrop-blur border border-[#7B3FF2]/20 rounded-lg p-6 hover:border-[#7B3FF2]/40 transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-gray-400 text-sm font-medium">Projected (Month)</h3>
+                      {voiceProjection.trend === 'increasing' ? (
+                        <TrendingUp className="w-5 h-5 text-orange-400" />
+                      ) : voiceProjection.trend === 'decreasing' ? (
+                        <TrendingDown className="w-5 h-5 text-green-400" />
+                      ) : (
+                        <Activity className="w-5 h-5 text-blue-400" />
+                      )}
+                    </div>
+                    <p className="text-3xl font-bold text-white">
+                      ${voiceProjection.projected_monthly_cost.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Based on {voiceProjection.days_elapsed}/{voiceProjection.days_in_month} days
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Additional Metrics Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
